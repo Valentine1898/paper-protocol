@@ -1,1 +1,1 @@
-test_NegativePrice|test_SetOracle_OnlyOwner|test_ZeroPrice
+test_WithdrawEther|test_WithdrawToken

@@ -14,17 +14,13 @@ contract OracleAdapterTest is Setup {
     }
 
     function test_PriceUpdate() public {
-        // Update price to $2500
-        mockOracle.setPrice(2500e8);
-
+        mockOracle.setPrice(2500e8); // 8 decimals, Chainlink style
         uint256 price = oracleAdapter.getPrice(ETH);
         assertEq(price, 2500e18);
     }
 
     function test_StalePrice() public {
-        // Move time forward past heartbeat
-        vm.warp(block.timestamp + 2 hours);
-
+        vm.warp(block.timestamp + 2 hours); // move time forward past heartbeat
         vm.expectRevert(OracleAdapter.StalePrice.selector);
         oracleAdapter.getPrice(ETH);
     }
@@ -36,7 +32,7 @@ contract OracleAdapterTest is Setup {
                 address(1)
             )
         );
-        oracleAdapter.getPrice(address(1)); // Non-existent token
+        oracleAdapter.getPrice(address(1));
     }
 
     function test_SetOracle() public {
@@ -47,17 +43,13 @@ contract OracleAdapterTest is Setup {
             decimals: 8,
             heartbeat: 1 hours
         });
-
         oracleAdapter.setOracle(ETH, config);
-
-        // Verify oracle was set
         (
             OracleAdapter.OracleType oracleType,
             address oracleAddress,
             uint8 decimals,
             uint256 heartbeat
         ) = oracleAdapter.getOracle(ETH);
-
         assertEq(uint8(oracleType), uint8(OracleAdapter.OracleType.Chainlink));
         assertEq(oracleAddress, newOracle);
         assertEq(decimals, 8);
@@ -65,15 +57,13 @@ contract OracleAdapterTest is Setup {
     }
 
     function test_SetOracle_OnlyOwner() public {
-        vm.prank(address(1)); // Switch to non-owner address
-
+        vm.prank(address(1));
         OracleAdapter.OracleConfig memory config = OracleAdapter.OracleConfig({
             oracleType: OracleAdapter.OracleType.Chainlink,
             oracleAddress: address(0x123),
             decimals: 8,
             heartbeat: 1 hours
         });
-
         vm.expectRevert(
             abi.encodeWithSelector(
                 Ownable.OwnableUnauthorizedAccount.selector,
@@ -85,14 +75,12 @@ contract OracleAdapterTest is Setup {
 
     function test_ZeroPrice() public {
         mockOracle.setPrice(0);
-
         vm.expectRevert(OracleAdapter.InvalidPrice.selector);
         oracleAdapter.getPrice(ETH);
     }
 
     function test_NegativePrice() public {
         mockOracle.setPrice(-1000e8);
-
         vm.expectRevert(OracleAdapter.InvalidPrice.selector);
         oracleAdapter.getPrice(ETH);
     }

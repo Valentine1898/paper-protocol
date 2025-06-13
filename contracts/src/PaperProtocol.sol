@@ -40,6 +40,18 @@ contract PaperProtocol is ERC721, Ownable {
         uint256 amount
     );
     event OracleAdapterSet(address indexed oracleAdapter);
+    event PresetSet(
+        address indexed token,
+        uint256 indexed amount,
+        uint256 indexed priceTarget
+    );
+    event PresetRemoved(bytes32 indexed presetId);
+
+    struct Preset {
+        address token;
+        uint256 amount;
+        uint256 priceTarget;
+    }
 
     struct Deposit {
         address token;
@@ -49,8 +61,7 @@ contract PaperProtocol is ERC721, Ownable {
         bool isPreset;
     }
 
-    mapping(address token => mapping(uint256 amount => mapping(uint256 priceTarget => bool)))
-        public isPreset;
+    mapping(bytes32 presetId => Preset) public presets;
 
     mapping(uint256 tokenId => bool) public isWithdrawn;
 
@@ -62,6 +73,51 @@ contract PaperProtocol is ERC721, Ownable {
 
     constructor() ERC721("Paper Protocol", "PP") Ownable(msg.sender) {}
 
+    function setPresets(Preset[] memory presets_) public onlyOwner {
+        for (uint256 i = 0; i < presets_.length; i++) {
+            presets[
+                getPresetId(
+                    presets_[i].token,
+                    presets_[i].amount,
+                    presets_[i].priceTarget
+                )
+            ] = presets_[i];
+
+            emit PresetSet(
+                presets_[i].token,
+                presets_[i].amount,
+                presets_[i].priceTarget
+            );
+        }
+    }
+
+    function removePresets(bytes32[] memory presetIds) public onlyOwner {
+        for (uint256 i = 0; i < presetIds.length; i++) {
+            delete presets[presetIds[i]];
+            emit PresetRemoved(presetIds[i]);
+        }
+    }
+
+    function getPresetId(
+        address token,
+        uint256 amount,
+        uint256 priceTarget
+    ) public view returns (bytes32) {
+        return keccak256(abi.encode(token, amount, priceTarget));
+    }
+
+    function getPreset(
+        address token,
+        uint256 amount,
+        uint256 priceTarget
+    ) public view returns (Preset memory) {
+        return presets[getPresetId(token, amount, priceTarget)];
+    }
+
+    function checkIsPreset(Preset memory preset) public view returns (bool) {
+        return preset.amount != 0 && preset.priceTarget != 0;
+    }
+
     function setOracleAdapter(address _oracleAdapter) public onlyOwner {
         oracleAdapter = OracleAdapter(_oracleAdapter);
         emit OracleAdapterSet(_oracleAdapter);
@@ -72,7 +128,9 @@ contract PaperProtocol is ERC721, Ownable {
         uint256 amount,
         uint256 priceTarget
     ) public payable {
-        bool isPreset_ = isPreset[token][amount][priceTarget];
+        Preset memory preset = getPreset(token, amount, priceTarget);
+
+        bool isPreset_ = checkIsPreset(preset);
 
         if (token == address(0)) {
             amount = msg.value;
