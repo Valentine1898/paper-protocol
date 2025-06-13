@@ -1,0 +1,22 @@
+# Foundry build artifacts
+out/
+artifacts/
+
+# Dependencies
+lib/
+
+# Node modules (if you use JS tooling)
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# VSCode settings
+.vscode/
+
+# OS files
+.DS_Store
+
+# Forge coverage
+coverage/
