@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from "./interfaces/chainlink/AggregatorV3Interface.sol";
@@ -9,6 +9,7 @@ contract OracleAdapter is Ownable {
     error InvalidOracleType();
     error InvalidDecimals();
     error StalePrice();
+    error InvalidPrice();
 
     enum OracleType {
         Chainlink,
@@ -76,7 +77,33 @@ contract OracleAdapter is Ownable {
         // Check if price is stale
         if (block.timestamp - updatedAt > config.heartbeat) revert StalePrice();
 
+        // Check for negative or zero price
+        if (answer <= 0) revert InvalidPrice();
+
         // Convert to 18 decimals
         return uint256(answer) * (10 ** (18 - config.decimals));
+    }
+
+    function getOracle(
+        address token
+    )
+        external
+        view
+        returns (
+            OracleType oracleType,
+            address oracleAddress,
+            uint8 decimals,
+            uint256 heartbeat
+        )
+    {
+        OracleConfig memory config = oracleConfigs[token];
+        if (config.oracleAddress == address(0)) revert OracleNotSet(token);
+
+        return (
+            config.oracleType,
+            config.oracleAddress,
+            config.decimals,
+            config.heartbeat
+        );
     }
 }
