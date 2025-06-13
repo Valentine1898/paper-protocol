@@ -5,6 +5,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { usePaperProtocol } from '@/hooks/usePaperProtocol';
 import { createPublicClient, http, formatEther } from 'viem';
 import { sepolia } from 'viem/chains';
+import PresetInput from './PresetInput';
 
 // ERC20 ABI for balance checking
 const ERC20_ABI = [
@@ -241,67 +242,27 @@ export default function DepositForm() {
       </div>
 
       {/* Amount Input */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Amount ({selectedToken.symbol})
-        </label>
-        <div className="space-y-2">
-          <div className="relative">
-            <input
-              type="number"
-              step="0.0001"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder={`Enter ${selectedToken.symbol} amount`}
-              className="w-full p-3 pr-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
-              {getAmountPresets().map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => setAmount(preset.value)}
-                  className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors whitespace-nowrap"
-                >
-                  {preset.value}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-gray-500">
-            Available: {getCurrentTokenBalance().toFixed(4)} {selectedToken.symbol}
-          </p>
-        </div>
-      </div>
+      <PresetInput
+        label={`Amount (${selectedToken.symbol})`}
+        value={amount}
+        onChange={setAmount}
+        presets={getAmountPresets()}
+        placeholder={`Enter ${selectedToken.symbol} amount`}
+        step="0.0001"
+        presetButtonColor="blue"
+        helperText={`Available: ${getCurrentTokenBalance().toFixed(4)} ${selectedToken.symbol}`}
+      />
 
       {/* Target Price Input */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Target Price (USD)
-        </label>
-        <div className="space-y-2">
-          <div className="relative">
-            <input
-              type="number"
-              step="0.01"
-              value={targetPrice}
-              onChange={(e) => setTargetPrice(e.target.value)}
-              placeholder="Enter target price in USD"
-              className="w-full p-3 pr-40 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
-              {getPricePresets().map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => setTargetPrice(preset.value)}
-                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors whitespace-nowrap"
-                >
-                  {preset.value}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PresetInput
+        label="Target Price (USD)"
+        value={targetPrice}
+        onChange={setTargetPrice}
+        presets={getPricePresets()}
+        placeholder="Enter target price in USD"
+        step="0.01"
+        presetButtonColor="green"
+      />
 
       {/* Submit Button */}
       <button
