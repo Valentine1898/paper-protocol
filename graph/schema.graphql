@@ -1,0 +1,418 @@
+"""
+Paper Protocol User Entity
+Stores aggregated user data and statistics
+"""
+type User @entity(immutable: false) {
+  "User wallet address"
+  id: Bytes!
+  
+  "All locks created by this user"
+  locks: [Lock!]! @derivedFrom(field: "user")
+  
+  "All NFTs owned by this user"
+  nfts: [NFT!]! @derivedFrom(field: "owner")
+  
+  "Total value locked by user across all locks"
+  totalValueLocked: BigInt!
+  
+  "Total successful predictions"
+  successfulPredictions: Int!
+  
+  "Total failed predictions"
+  failedPredictions: Int!
+  
+  "Success rate percentage (0-100)"
+  successRate: BigDecimal!
+  
+  "Highest NFT rank achieved"
+  highestNFTRank: Int!
+  
+  "Total number of locks created"
+  totalLocks: Int!
+  
+  "Total number of active locks"
+  activeLocks: Int!
+  
+  "First interaction timestamp"
+  firstSeenAt: BigInt!
+  
+  "Last activity timestamp"
+  lastSeenAt: BigInt!
+  
+  "User's current rank based on TVL"
+  rank: Int!
+}
+
+"""
+Token Lock Entity
+Represents each individual token lock
+"""
+type Lock @entity(immutable: false) {
+  "Unique lock ID (transaction hash + log index)"
+  id: Bytes!
+  
+  "User who created this lock"
+  user: User!
+  
+  "Token being locked"
+  token: Token!
+  
+  "Amount of tokens locked"
+  amount: BigInt!
+  
+  "Target price for the token"
+  targetPrice: BigInt!
+  
+  "Current price when locked"
+  lockPrice: BigInt!
+  
+  "Block timestamp when locked"
+  lockedAt: BigInt!
+  
+  "Block number when locked"
+  lockBlock: BigInt!
+  
+  "Is this lock still active"
+  isActive: Boolean!
+  
+  "Unlock timestamp (if unlocked)"
+  unlockedAt: BigInt
+  
+  "Was target price reached"
+  targetReached: Boolean
+  
+  "Final price when unlocked"
+  unlockPrice: BigInt
+  
+  "NFT minted for this lock"
+  nft: NFT
+  
+  "Lock duration in seconds"
+  duration: BigInt
+  
+  "Transaction hash of lock creation"
+  transactionHash: Bytes!
+}
+
+"""
+Token Entity
+Information about tokens supported by the protocol
+"""
+type Token @entity(immutable: false) {
+  "Token contract address"
+  id: Bytes!
+  
+  "Token symbol"
+  symbol: String!
+  
+  "Token name"
+  name: String!
+  
+  "Token decimals"
+  decimals: Int!
+  
+  "All locks for this token"
+  locks: [Lock!]! @derivedFrom(field: "token")
+  
+  "Total value locked for this token"
+  totalValueLocked: BigInt!
+  
+  "Number of active locks"
+  activeLocks: Int!
+  
+  "Number of successful predictions"
+  successfulPredictions: Int!
+  
+  "Number of failed predictions"
+  failedPredictions: Int!
+  
+  "Current price (last known)"
+  currentPrice: BigInt!
+  
+  "Price updated at timestamp"
+  priceUpdatedAt: BigInt!
+  
+  "All time high price"
+  allTimeHigh: BigInt!
+  
+  "All time low price"
+  allTimeLow: BigInt!
+  
+  "First seen timestamp"
+  firstSeenAt: BigInt!
+}
+
+"""
+NFT Entity
+Represents minted NFTs for successful/failed predictions
+"""
+type NFT @entity(immutable: false) {
+  "NFT token ID"
+  id: String!
+  
+  "Current owner"
+  owner: User!
+  
+  "Lock that generated this NFT"
+  lock: Lock!
+  
+  "NFT rank (1-10, higher is better)"
+  rank: Int!
+  
+  "Minted at timestamp"
+  mintedAt: BigInt!
+  
+  "Transaction hash of minting"
+  transactionHash: Bytes!
+  
+  "URI for metadata"
+  tokenURI: String
+}
+
+"""
+Protocol Global Statistics
+"""
+type ProtocolStats @entity(immutable: false) {
+  "Singleton entity ID"
+  id: String!
+  
+  "Total Value Locked across all tokens"
+  totalValueLocked: BigInt!
+  
+  "Total number of users"
+  totalUsers: Int!
+  
+  "Total number of locks"
+  totalLocks: Int!
+  
+  "Total active locks"
+  activeLocks: Int!
+  
+  "Total NFTs minted"
+  totalNFTsMinted: Int!
+  
+  "Total successful predictions"
+  totalSuccessfulPredictions: Int!
+  
+  "Total failed predictions"
+  totalFailedPredictions: Int!
+  
+  "Overall success rate"
+  overallSuccessRate: BigDecimal!
+  
+  "Number of supported tokens"
+  supportedTokensCount: Int!
+  
+  "Last updated timestamp"
+  lastUpdatedAt: BigInt!
+  
+  "All time high TVL"
+  allTimeHighTVL: BigInt!
+  
+  "Number of partners"
+  partnersCount: Int!
+}
+
+"""
+Daily Statistics
+Historical data for analytics
+"""
+type DailyStats @entity(immutable: false) {
+  "Date in YYYY-MM-DD format"
+  id: String!
+  
+  "Date timestamp"
+  date: BigInt!
+  
+  "Total Value Locked at end of day"
+  totalValueLocked: BigInt!
+  
+  "Number of new users"
+  newUsers: Int!
+  
+  "Number of new locks"
+  newLocks: Int!
+  
+  "Number of unlocks"
+  unlocks: Int!
+  
+  "Number of NFTs minted"
+  nftsMinted: Int!
+  
+  "Daily volume (sum of new locks)"
+  dailyVolume: BigInt!
+  
+  "Active users (users who made transactions)"
+  activeUsers: Int!
+  
+  "Success rate for the day"
+  successRate: BigDecimal!
+}
+
+"""
+Partner Entity
+Protocol partners who can run airdrops
+"""
+type Partner @entity(immutable: false) {
+  "Partner wallet address"
+  id: Bytes!
+  
+  "Partner name"
+  name: String!
+  
+  "Airdrop campaigns by this partner"
+  campaigns: [AirdropCampaign!]! @derivedFrom(field: "partner")
+  
+  "Added at timestamp"
+  addedAt: BigInt!
+  
+  "Number of campaigns run"
+  campaignsCount: Int!
+  
+  "Is partner active"
+  isActive: Boolean!
+}
+
+"""
+Airdrop Campaign Entity
+Information about airdrop campaigns
+"""
+type AirdropCampaign @entity(immutable: false) {
+  "Campaign ID"
+  id: String!
+  
+  "Partner running the campaign"
+  partner: Partner!
+  
+  "Campaign name/description"
+  name: String!
+  
+  "Created at timestamp"
+  createdAt: BigInt!
+  
+  "Campaign start timestamp"
+  startTime: BigInt
+  
+  "Campaign end timestamp"
+  endTime: BigInt
+  
+  "Minimum TVL requirement"
+  minTVLRequired: BigInt
+  
+  "Required NFT rank (minimum)"
+  minNFTRank: Int
+  
+  "Required token address (if specific)"
+  requiredToken: Token
+  
+  "Minimum lock duration required"
+  minLockDuration: BigInt
+  
+  "Campaign status"
+  status: CampaignStatus!
+  
+  "Number of eligible users"
+  eligibleUsersCount: Int!
+}
+
+"""
+Price Update Entity
+Tracks token price changes
+"""
+type PriceUpdate @entity(immutable: false) {
+  "Update ID (token address + timestamp)"
+  id: Bytes!
+  
+  "Token being updated"
+  token: Token!
+  
+  "New price"
+  price: BigInt!
+  
+  "Updated at timestamp"
+  timestamp: BigInt!
+  
+  "Block number"
+  blockNumber: BigInt!
+  
+  "Source of price update"
+  source: String!
+}
+
+"""
+User Activity Entity
+Tracks user interactions for analytics
+"""
+type UserActivity @entity(immutable: true) {
+  "Activity ID (user + timestamp + type)"
+  id: Bytes!
+  
+  "User performing activity"
+  user: User!
+  
+  "Type of activity"
+  activityType: ActivityType!
+  
+  "Related lock (if applicable)"
+  lock: Lock
+  
+  "Related NFT (if applicable)"
+  nft: NFT
+  
+  "Timestamp of activity"
+  timestamp: BigInt!
+  
+  "Transaction hash"
+  transactionHash: Bytes!
+  
+  "Additional data (JSON string)"
+  metadata: String
+}
+
+"""
+Leaderboard Entry
+For ranking users by different metrics
+"""
+type LeaderboardEntry @entity(immutable: false) {
+  "Entry ID (metric + rank)"
+  id: String!
+  
+  "User in this position"
+  user: User!
+  
+  "Leaderboard type"
+  leaderboardType: LeaderboardType!
+  
+  "User's rank"
+  rank: Int!
+  
+  "User's score for this metric"
+  score: BigInt!
+  
+  "Last updated"
+  lastUpdated: BigInt!
+}
+
+enum CampaignStatus {
+  CREATED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ActivityType {
+  LOCK_CREATED
+  LOCK_UNLOCKED
+  NFT_MINTED
+  PRICE_TARGET_REACHED
+  PRICE_TARGET_MISSED
+}
+
+enum LeaderboardType {
+  TVL
+  SUCCESS_RATE
+  TOTAL_LOCKS
+  NFT_RANK
+  LONGEST_HOLDER
+} 

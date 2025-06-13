@@ -1,0 +1,38 @@
+{
+  "name": "paper-protocol-subgraph",
+  "version": "1.0.0",
+  "description": "The Graph subgraph for Paper Protocol - DeFi token locking with NFT rewards",
+  "main": "index.js",
+  "scripts": {
+    "build": "graph build",
+    "codegen": "graph codegen",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ paper-protocol/paper-protocol-subgraph",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 paper-protocol/paper-protocol-subgraph",
+    "deploy-studio": "graph deploy --studio paper-protocol-subgraph",
+    "create-local": "graph create --node http://localhost:8020/ paper-protocol/paper-protocol-subgraph",
+    "remove-local": "graph remove --node http://localhost:8020/ paper-protocol/paper-protocol-subgraph",
+    "test": "graph test",
+    "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:polygon": "mustache config/polygon.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:arbitrum": "mustache config/arbitrum.json subgraph.template.yaml > subgraph.yaml"
+  },
+  "keywords": [
+    "thegraph",
+    "subgraph",
+    "paper-protocol",
+    "defi",
+    "ethereum",
+    "blockchain"
+  ],
+  "author": "Paper Protocol Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paper-protocol/subgraph"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.56.0",
+    "@graphprotocol/graph-ts": "^0.31.0",
+    "mustache": "^4.2.0"
+  }
+}
