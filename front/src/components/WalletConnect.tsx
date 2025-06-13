@@ -10,13 +10,13 @@ export default function WalletConnect() {
   const [balance, setBalance] = useState<string>('0');
   const [loading, setLoading] = useState(false);
 
-  const publicClient = createPublicClient({
-    chain: sepolia,
-    transport: http()
-  });
-
   const loadBalance = useCallback(async () => {
     if (!authenticated || !user?.wallet?.address) return;
+
+    const publicClient = createPublicClient({
+      chain: sepolia,
+      transport: http()
+    });
 
     try {
       setLoading(true);
@@ -30,7 +30,7 @@ export default function WalletConnect() {
     } finally {
       setLoading(false);
     }
-  }, [authenticated, user?.wallet?.address, publicClient]);
+  }, [authenticated, user?.wallet?.address]);
 
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
