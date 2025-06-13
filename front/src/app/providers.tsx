@@ -3,15 +3,12 @@
 import { PrivyProvider } from '@privy-io/react-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet, sepolia, polygon, polygonMumbai } from 'wagmi/chains';
+import { baseSepolia } from 'wagmi/chains';
 
 const config = createConfig({
-  chains: [mainnet, sepolia, polygon, polygonMumbai],
+  chains: [baseSepolia],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [polygon.id]: http(),
-    [polygonMumbai.id]: http(),
+    [baseSepolia.id]: http(),
   },
 });
 

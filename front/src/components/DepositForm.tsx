@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { usePaperProtocol } from '@/hooks/usePaperProtocol';
 import { createPublicClient, http, formatEther } from 'viem';
-import { sepolia } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import PresetInput from './PresetInput';
 
 // ERC20 ABI for balance checking
@@ -18,7 +18,7 @@ const ERC20_ABI = [
   }
 ] as const;
 
-// Supported tokens
+// Supported tokens on Base Sepolia
 const SUPPORTED_TOKENS = [
   {
     symbol: 'ETH',
@@ -28,25 +28,11 @@ const SUPPORTED_TOKENS = [
     icon: 'Ξ'
   },
   {
-    symbol: 'USDC',
-    name: 'USD Coin',
-    address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', // Sepolia USDC
-    decimals: 6,
-    icon: '💰'
-  },
-  {
-    symbol: 'DAI',
-    name: 'Dai Stablecoin',
-    address: '0x3e622317f8C93f7328350cF0B56d9eD4C620C5d6', // Sepolia DAI
+    symbol: 'MockToken',
+    name: 'Mock Token',
+    address: '0xE130Ec9bB21e477E2822E940aDB1A43767A0F80a', // Base Sepolia Mock Token
     decimals: 18,
     icon: '🪙'
-  },
-  {
-    symbol: 'WETH',
-    name: 'Wrapped Ethereum',
-    address: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', // Sepolia WETH
-    decimals: 18,
-    icon: '🔄'
   }
 ];
 
@@ -59,6 +45,7 @@ interface TokenBalance {
 export default function DepositForm() {
   const { authenticated, user } = usePrivy();
   const paperProtocol = usePaperProtocol();
+  const [isCorrectChain, setIsCorrectChain] = useState(true);
   
   const [selectedToken, setSelectedToken] = useState(SUPPORTED_TOKENS[0]);
   const [amount, setAmount] = useState('');
@@ -71,7 +58,7 @@ export default function DepositForm() {
     if (!authenticated || !user?.wallet?.address) return;
 
     const publicClient = createPublicClient({
-      chain: sepolia,
+      chain: baseSepolia,
       transport: http()
     });
 
@@ -119,11 +106,23 @@ export default function DepositForm() {
     }
   }, [authenticated, user?.wallet?.address]);
 
+  // Stable reference to chain check function
+  const isOnCorrectChainFn = useMemo(() => paperProtocol.isOnCorrectChain, [paperProtocol.isOnCorrectChain]);
+
+  // Check chain status
+  const checkChain = useCallback(async () => {
+    if (authenticated && user?.wallet?.address && isOnCorrectChainFn) {
+      const correct = await isOnCorrectChainFn();
+      setIsCorrectChain(correct);
+    }
+  }, [authenticated, user?.wallet?.address, isOnCorrectChainFn]);
+
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
       loadTokenBalances();
+      checkChain();
     }
-  }, [authenticated, user?.wallet?.address, loadTokenBalances]);
+  }, [authenticated, user?.wallet?.address, loadTokenBalances, checkChain]);
 
   const getCurrentTokenBalance = () => {
     const balance = tokenBalances.find(b => b.symbol === selectedToken.symbol);
@@ -264,13 +263,26 @@ export default function DepositForm() {
         presetButtonColor="green"
       />
 
+      {/* Network Warning */}
+      {!isCorrectChain && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <div className="text-orange-600">⚠️</div>
+            <div>
+              <div className="text-sm font-medium text-orange-800">Wrong Network</div>
+              <div className="text-xs text-orange-600">Please switch to Base Sepolia to create deposits</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Submit Button */}
       <button
         onClick={handleDeposit}
-        disabled={loading || !amount || !targetPrice || !paperProtocol.isConnected}
+        disabled={loading || !amount || !targetPrice || !paperProtocol.isConnected || !isCorrectChain}
         className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
       >
-        {loading ? 'Creating Deposit...' : 'Create Deposit'}
+        {loading ? 'Creating Deposit...' : !isCorrectChain ? 'Switch to Base Sepolia' : 'Create Deposit'}
       </button>
 
       {/* Info */}

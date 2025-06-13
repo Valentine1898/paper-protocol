@@ -1,20 +1,24 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { createPublicClient, http, formatEther } from 'viem';
-import { sepolia } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
+import { usePaperProtocol } from '@/hooks/usePaperProtocol';
 
 export default function WalletConnect() {
   const { ready, authenticated, user, login, logout } = usePrivy();
+  const paperProtocol = usePaperProtocol();
   const [balance, setBalance] = useState<string>('0');
   const [loading, setLoading] = useState(false);
+  const [isCorrectChain, setIsCorrectChain] = useState(true);
+  const [switchingChain, setSwitchingChain] = useState(false);
 
   const loadBalance = useCallback(async () => {
     if (!authenticated || !user?.wallet?.address) return;
 
     const publicClient = createPublicClient({
-      chain: sepolia,
+      chain: baseSepolia,
       transport: http()
     });
 
@@ -32,11 +36,37 @@ export default function WalletConnect() {
     }
   }, [authenticated, user?.wallet?.address]);
 
+  // Stable reference to chain check function
+  const isOnCorrectChainFn = useMemo(() => paperProtocol.isOnCorrectChain, [paperProtocol.isOnCorrectChain]);
+
+  // Check chain status
+  const checkChain = useCallback(async () => {
+    if (authenticated && user?.wallet?.address && isOnCorrectChainFn) {
+      const correct = await isOnCorrectChainFn();
+      setIsCorrectChain(correct);
+    }
+  }, [authenticated, user?.wallet?.address, isOnCorrectChainFn]);
+
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
       loadBalance();
+      checkChain();
     }
-  }, [authenticated, user?.wallet?.address, loadBalance]);
+  }, [authenticated, user?.wallet?.address, loadBalance, checkChain]);
+
+  // Handle chain switch
+  const handleSwitchChain = async () => {
+    try {
+      setSwitchingChain(true);
+      await paperProtocol.switchToBaseSepolia();
+      await checkChain();
+      await loadBalance();
+    } catch (error) {
+      console.error('Error switching chain:', error);
+    } finally {
+      setSwitchingChain(false);
+    }
+  };
 
   if (!ready) {
     return (
@@ -63,7 +93,18 @@ export default function WalletConnect() {
 
   return (
     <div className="flex items-center space-x-3">
-      <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+      {/* Network Status */}
+      {!isCorrectChain && (
+        <button
+          onClick={handleSwitchChain}
+          disabled={switchingChain}
+          className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+        >
+          {switchingChain ? 'Switching...' : 'Switch to Base Sepolia'}
+        </button>
+      )}
+      
+      <div className={`border rounded-lg px-3 py-2 ${isCorrectChain ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'}`}>
         <div className="flex items-center space-x-2">
           <div>
             <div className="text-xs text-gray-500">Balance</div>
@@ -78,6 +119,15 @@ export default function WalletConnect() {
               {user?.wallet?.address ? formatAddress(user.wallet.address) : '...'}
             </div>
           </div>
+          {!isCorrectChain && (
+            <>
+              <div className="border-l border-gray-300 h-8"></div>
+              <div>
+                <div className="text-xs text-red-500">Wrong Network</div>
+                <div className="text-xs text-red-600">Switch to Base Sepolia</div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       
