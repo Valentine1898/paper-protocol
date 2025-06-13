@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import WalletConnect from "@/components/WalletConnect";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
+          <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
+            <div className="container mx-auto flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <h1 className="text-xl font-bold text-gray-900">Paper Protocol</h1>
+              </div>
+              <WalletConnect />
+            </div>
+          </header>
           {children}
         </Providers>
       </body>
