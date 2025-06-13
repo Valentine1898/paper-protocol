@@ -3,14 +3,12 @@ pragma solidity ^0.8.13;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AggregatorV3Interface} from "./interfaces/chainlink/AggregatorV3Interface.sol";
-import {IRedstoneAdapter} from "./interfaces/redstone/IRedstoneAdapter.sol";
 
 contract OracleAdapter is Ownable {
     error OracleNotSet(address token);
     error InvalidOracleType();
     error InvalidDecimals();
     error StalePrice();
-    error InvalidPrice();
 
     enum OracleType {
         Chainlink,
@@ -69,47 +67,16 @@ contract OracleAdapter is Ownable {
         OracleConfig memory config = oracleConfigs[token];
         if (config.oracleAddress == address(0)) revert OracleNotSet(token);
 
-        if (config.oracleType == OracleType.Chainlink) {
-            price = _getChainlinkPrice(config);
-        } else if (config.oracleType == OracleType.Redstone) {
-            price = _getRedstonePrice(config);
-        } else {
-            revert InvalidOracleType();
-        }
-    }
-
-    function _getChainlinkPrice(
-        OracleConfig memory config
-    ) internal view returns (uint256) {
         AggregatorV3Interface oracle = AggregatorV3Interface(
             config.oracleAddress
         );
 
-        (, int256 price, , uint256 updatedAt, ) = oracle.latestRoundData();
+        (, int256 answer, , uint256 updatedAt, ) = oracle.latestRoundData();
 
         // Check if price is stale
         if (block.timestamp - updatedAt > config.heartbeat) revert StalePrice();
 
         // Convert to 18 decimals
-        return uint256(price) * (10 ** (18 - config.decimals));
-    }
-
-    function _getRedstonePrice(
-        OracleConfig memory config
-    ) internal view returns (uint256) {
-        IRedstoneAdapter oracle = IRedstoneAdapter(config.oracleAddress);
-
-        bytes32 dataFeedId = bytes32(uint256(uint160(config.oracleAddress)));
-
-        // Get price from Redstone (returns in 8 decimals)
-        uint256 price = oracle.getValueForDataFeed(dataFeedId);
-
-        // Check if price is stale
-        (, uint128 blockTimestamp) = oracle.getTimestampsFromLatestUpdate();
-        if (block.timestamp - blockTimestamp > config.heartbeat)
-            revert StalePrice();
-
-        // Convert to 18 decimals
-        return price * (10 ** (18 - config.decimals));
+        return uint256(answer) * (10 ** (18 - config.decimals));
     }
 }

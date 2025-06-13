@@ -9,6 +9,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {OracleAdapter} from "./OracleAdapter.sol";
 
+import {URIUtils} from "./URIUtils.sol";
+
 contract PaperProtocol is ERC721, Ownable {
     using SafeERC20 for IERC20;
 
@@ -20,12 +22,24 @@ contract PaperProtocol is ERC721, Ownable {
     error CallerIsNotNFTOwner(address caller, address owner);
     error TokenAlreadyWithdrawn(uint256 tokenId);
     error EtherTransferFailed(uint256 tokenId);
+    error PriceTargetNotReached(
+        uint256 tokenId,
+        uint256 targetPrice,
+        uint256 currentPrice
+    );
+
     event Deposited(
         uint256 indexed tokenId,
         address indexed token,
         uint256 amount,
         uint256 priceTarget
     );
+    event Withdrawn(
+        uint256 indexed tokenId,
+        address indexed token,
+        uint256 amount
+    );
+    event OracleAdapterSet(address indexed oracleAdapter);
 
     struct Deposit {
         address token;
@@ -34,7 +48,6 @@ contract PaperProtocol is ERC721, Ownable {
         uint256 timestamp; // deposited at
         bool isPreset;
     }
-    event OracleAdapterSet(address indexed oracleAdapter);
 
     mapping(address token => mapping(uint256 amount => mapping(uint256 priceTarget => bool)))
         public isPreset;
@@ -105,6 +118,16 @@ contract PaperProtocol is ERC721, Ownable {
 
         Deposit memory userDeposit = deposits[tokenId];
 
+        uint256 currentPrice = oracleAdapter.getPrice(userDeposit.token);
+
+        if (currentPrice < userDeposit.priceTarget) {
+            revert PriceTargetNotReached(
+                tokenId,
+                userDeposit.priceTarget,
+                currentPrice
+            );
+        }
+
         if (userDeposit.token == address(0)) {
             (bool success, ) = payable(msg.sender).call{
                 value: userDeposit.amount
@@ -118,5 +141,17 @@ contract PaperProtocol is ERC721, Ownable {
                 userDeposit.amount
             );
         }
+
+        emit Withdrawn(tokenId, userDeposit.token, userDeposit.amount);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        return URIUtils._tokenURI(tokenId);
+    }
+
+    function contractURI() public pure returns (string memory) {
+        return URIUtils._contractURI();
     }
 }
