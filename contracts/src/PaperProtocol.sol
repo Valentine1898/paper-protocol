@@ -7,6 +7,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {OracleAdapter} from "./OracleAdapter.sol";
+
 contract PaperProtocol is ERC721, Ownable {
     using SafeERC20 for IERC20;
 
@@ -32,6 +34,7 @@ contract PaperProtocol is ERC721, Ownable {
         uint256 timestamp; // deposited at
         bool isPreset;
     }
+    event OracleAdapterSet(address indexed oracleAdapter);
 
     mapping(address token => mapping(uint256 amount => mapping(uint256 priceTarget => bool)))
         public isPreset;
@@ -40,9 +43,16 @@ contract PaperProtocol is ERC721, Ownable {
 
     mapping(uint256 => Deposit) public deposits;
 
+    OracleAdapter public oracleAdapter;
+
     uint256 public nextTokenId = 1;
 
     constructor() ERC721("Paper Protocol", "PP") Ownable(msg.sender) {}
+
+    function setOracleAdapter(address _oracleAdapter) public onlyOwner {
+        oracleAdapter = OracleAdapter(_oracleAdapter);
+        emit OracleAdapterSet(_oracleAdapter);
+    }
 
     function deposit(
         address token,
