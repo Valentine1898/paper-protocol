@@ -102,7 +102,7 @@ contract PaperProtocol is ERC721, Ownable {
         address token,
         uint256 amount,
         uint256 priceTarget
-    ) public view returns (bytes32) {
+    ) public pure returns (bytes32) {
         return keccak256(abi.encode(token, amount, priceTarget));
     }
 
@@ -114,7 +114,7 @@ contract PaperProtocol is ERC721, Ownable {
         return presets[getPresetId(token, amount, priceTarget)];
     }
 
-    function checkIsPreset(Preset memory preset) public view returns (bool) {
+    function checkIsPreset(Preset memory preset) public pure returns (bool) {
         return preset.amount != 0 && preset.priceTarget != 0;
     }
 

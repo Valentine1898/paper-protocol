@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {Script} from "forge-std/Script.sol";
-import {MockOracle} from "../test/mocks/MockOracle.sol";
-import {OracleAdapter} from "../src/OracleAdapter.sol";
-import {PaperProtocol} from "../src/PaperProtocol.sol";
+import {MockOracle} from "test/mocks/MockOracle.sol";
+import {OracleAdapter} from "src/OracleAdapter.sol";
+import {PaperProtocol} from "src/PaperProtocol.sol";
 
 library Deployer {
     function deployMockOracle() internal returns (MockOracle) {
@@ -46,7 +46,5 @@ library Deployer {
         oracle = deployMockOracle();
         adapter = deployOracleAdapter();
         protocol = deployPaperProtocol();
-
-        setupOracleAdapter(adapter, oracle);
     }
 }

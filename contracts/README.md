@@ -1,66 +1,30 @@
-## Foundry
+## Base Sepolia
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+== Logs ==
+Mock Token: 0xE130Ec9bB21e477E2822E940aDB1A43767A0F80a
+Mock Token Oracle: 0x64A59090cB7bdA0c18cD4AD71203Cef957bA6ffE
+ETH Oracle: 0xB540Cd825c455711b075073Ef7C74b86B3ab9f4b
+Adapter: 0x5C793701fA61433385071961f6bF8748c98c5ca9
+Protocol: 0x14C59Ba26193C65d256C41f1077c8867eB41c805
 
-Foundry consists of:
+Mock Token Presets:
+Preset 1
+Amount: 100000000000000000000
+Price Target: 1500000000000000000
+Preset 2
+Amount: 100000000000000000000
+Price Target: 2000000000000000000
+Preset 3
+Amount: 100000000000000000000
+Price Target: 3000000000000000000
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+ETH Presets:
+Preset 1
+Amount: 1000000000000000
+Price Target: 3000000000000000000000
+Preset 2
+Amount: 10000000000000000
+Price Target: 4000000000000000000000
+Preset 3
+Amount: 50000000000000000
+Price Target: 6000000000000000000000

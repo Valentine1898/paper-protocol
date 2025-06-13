@@ -16,5 +16,6 @@ contract Setup is Test {
 
     function setUp() public virtual {
         (mockOracle, oracleAdapter, paperProtocol) = Deployer.deploy();
+        Deployer.setupOracleAdapter(oracleAdapter, mockOracle);
     }
 }
