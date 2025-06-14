@@ -33,7 +33,7 @@ interface LeaderboardData {
 }
 
 const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 
-  "https://api.studio.thegraph.com/query/113895/paper-protocol/v0.0.11";
+  "https://api.studio.thegraph.com/query/113895/paper-protocol/latest";
 
 export default function EthereumBelieverLeaderboard() {
   const [data, setData] = useState<LeaderboardData | null>(null);
