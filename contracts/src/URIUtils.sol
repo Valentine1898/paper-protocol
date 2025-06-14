@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Base64} from "lib/openzeppelin-contracts/contracts/utils/Base64.sol";
+import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
+import {IERC20Metadata} from "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
 
 import {PaperTiers} from "./PaperTiers.sol";
 import {PaperWrapper} from "./PaperWrapper.sol";
+import {StringUtils} from "./StringUtils.sol";
 
 library URIUtils {
     function generateBase64EncodedJSON(
@@ -76,62 +78,146 @@ library URIUtils {
         return IERC20Metadata(token).decimals();
     }
 
-    /*
-{
-   "name": "Paper Protocol NFT ${id}",
-   "description": "A deposit in Paper Protocol",
-   "image": "https://",
-   "attributes": [
-      {
-         "trait_type": "Token",
-         "value": "ETH"
-      },
-      {
-         "trait_type": "Amount",
-         "value": "1.5"
-      },
-      {
-         "trait_type": "Price Target",
-         "value": "2000"
-      },
-      {
-         "trait_type": "Tier",
-         "value": "Paper Hands" | "Smart Hands" |  "Strong Hands" | "Diamond Hands"
-      }
-   ]
-}
-*/
-    function tokenURI(
-        IPaperProtocol.Deposit memory deposit,
-        uint256 oracleDecimals
-    ) internal view returns (string memory) {
-        string memory svgImageURI = svgToImageURI(
-            generateTokenSVG(deposit, oracleDecimals)
-        );
-
+    function generateAttributeItem(
+        string memory name,
+        string memory value
+    ) internal pure returns (string memory) {
         return
-            generateBase64EncodedJSON(
+            string(
                 abi.encodePacked(
-                    '{"name":"Paper Protocol",',
-                    '"image":"',
-                    svgImageURI,
+                    '{"trait_type":"',
+                    name,
+                    '","value":"',
+                    value,
                     '"}'
                 )
             );
     }
 
-    /*
-   {
-      "name": "Paper Protocol",
-      "description": "A protocol for token deposits with price targets",
-      "image": "https://", // SVG
-      "external_link": "https://",
-   }
-   */
-    function contractURI() internal view returns (string memory) {
+    /**
+     * @notice Generates the token URI for a specific NFT token
+     * @param tokenId The ID of the token
+     * @return A JSON string containing the token metadata with the following structure:
+     * {
+     *   "name": "Paper Protocol NFT ${id}",
+     *   "description": "A deposit in Paper Protocol",
+     *   "image": "data:image/svg+xml;base64,${base64_encoded_svg}",
+     *   "attributes": [
+     *     {
+     *       "trait_type": "Token",
+     *       "value": "${token_symbol}"
+     *     },
+     *     {
+     *       "trait_type": "Amount",
+     *       "value": "${formatted_amount}"
+     *     },
+     *     {
+     *       "trait_type": "Lock Price",
+     *       "value": "${formatted_lock_price}"
+     *     },
+     *     {
+     *       "trait_type": "Price Target",
+     *       "value": "${formatted_target_price}"
+     *     },
+     *     {
+     *       "trait_type": "Tier",
+     *       "value": "${tier_name}"
+     *     }
+     *   ]
+     * }
+     */
+    function tokenURI(
+        uint256 tokenId,
+        IPaperProtocol.Deposit memory deposit,
+        uint256 oracleDecimals
+    ) internal view returns (string memory) {
+        PaperTiers.PaperTierData memory paperTierData = PaperTiers
+            .getPaperTierData(deposit.priceTarget, oracleDecimals);
+
+        PaperWrapper.PaperProtocolTokenSVGArgs
+            memory paperWrapperArgs = PaperWrapper.PaperProtocolTokenSVGArgs({
+                lockPrice: deposit.priceAtDeposit,
+                targetPrice: deposit.priceTarget,
+                depositAmount: deposit.amount,
+                oracleDecimals: oracleDecimals,
+                tokenDecimals: getTokenDecimals(deposit.token),
+                tokenSymbol: getTokenSymbol(deposit.token),
+                borderColor: paperTierData.borderColor,
+                tierText: paperTierData.tierText,
+                tierTextColor: paperTierData.tierTextColor,
+                paperSVG: paperTierData.paperSVG
+            });
+
+        bytes memory fullSvg = PaperWrapper.getPaperProtocolTokenSVG(
+            paperWrapperArgs
+        );
+
+        string memory svgImageURI = svgToImageURI(string(fullSvg));
+
         return
             generateBase64EncodedJSON(
-                abi.encodePacked('{"name":"Paper Protocol"}')
+                abi.encodePacked(
+                    '{"name":"Paper Protocol NFT #',
+                    Strings.toString(tokenId),
+                    '",',
+                    '"image":"',
+                    svgImageURI,
+                    '",',
+                    '"attributes":[',
+                    generateAttributeItem(
+                        "Token",
+                        getTokenSymbol(deposit.token)
+                    ),
+                    ",",
+                    generateAttributeItem(
+                        "Amount",
+                        StringUtils.amountToString(
+                            deposit.amount,
+                            getTokenDecimals(deposit.token)
+                        )
+                    ),
+                    ",",
+                    generateAttributeItem(
+                        "Lock Price",
+                        StringUtils.priceToString(
+                            deposit.priceAtDeposit,
+                            oracleDecimals
+                        )
+                    ),
+                    ",",
+                    generateAttributeItem(
+                        "Price Target",
+                        StringUtils.priceToString(
+                            deposit.priceTarget,
+                            oracleDecimals
+                        )
+                    ),
+                    ",",
+                    generateAttributeItem("Tier", paperTierData.tierText),
+                    "]}"
+                )
+            );
+    }
+
+    /**
+     * @notice Generates the contract URI containing the collection metadata
+     * @return A JSON string containing the contract metadata with the following structure:
+     * {
+     *   "name": "Paper Protocol",
+     *   "description": "A protocol for token deposits with price targets",
+     *   "image": "data:image/svg+xml;base64,${base64_encoded_svg}",
+     * }
+     */
+    function contractURI() internal pure returns (string memory) {
+        return
+            generateBase64EncodedJSON(
+                abi.encodePacked(
+                    '{"name":"Paper Protocol", ',
+                    '"description": "The first protocol that guarantees you will achieve your desired price",',
+                    '"external_link": "https://paper-protocol.vercel.app/",',
+                    '"image": "https://teal-key-swift-188.mypinata.cloud/ipfs/bafkreifjresjizmbxqrjlffoikm5itlqp52l5mjxtkxnq4zi2m7vznaoii"',
+                    "}"
+                )
             );
     }
 }

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Base64} from "lib/openzeppelin-contracts/contracts/utils/Base64.sol";
+import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 
 import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
+
+import {StringUtils} from "./StringUtils.sol";
 
 library PaperWrapper {
     struct PaperProtocolTokenSVGArgs {
@@ -18,22 +20,6 @@ library PaperWrapper {
         string tierText;
         string tierTextColor;
         string paperSVG;
-    }
-
-    // TODO: make this function to work with decimals, because precesion is currently shown with 18 decimals
-    function priceToString(
-        uint256 price,
-        uint256 oracleDecimals
-    ) internal pure returns (string memory) {
-        return Strings.toString(price / 10 ** oracleDecimals);
-    }
-
-    // TODO: same as with priceToString
-    function amountToString(
-        uint256 amount,
-        uint256 tokenDecimals
-    ) internal pure returns (string memory) {
-        return Strings.toString(amount / 10 ** tokenDecimals);
     }
 
     function getSVGHeader(
@@ -52,20 +38,62 @@ library PaperWrapper {
             );
     }
 
+    /**
+     * @notice Calculates the percentage increase between two prices
+     * @param lockPrice The original price
+     * @param targetPrice The target price
+     * @return int256 The percentage increase (can be negative for price decreases)
+     */
+    function calculatePriceIncreasePercentage(
+        uint256 lockPrice,
+        uint256 targetPrice
+    ) internal pure returns (int256) {
+        if (targetPrice >= lockPrice) {
+            return int256(((targetPrice - lockPrice) * 100) / lockPrice);
+        } else {
+            return -int256(((lockPrice - targetPrice) * 100) / lockPrice);
+        }
+    }
+
+    /**
+     * @notice Gets the price text for display in the SVG
+     * @param lockPrice The price at which the token was locked
+     * @param targetPrice The target price for the token
+     * @param oracleDecimals The number of decimals used by the oracle
+     * @return string memory The formatted price text
+     */
     function getPriceText(
-        string memory lockPriceStr,
-        string memory targetPriceStr
+        uint256 lockPrice,
+        uint256 targetPrice,
+        uint256 oracleDecimals
     ) internal pure returns (bytes memory) {
+        string memory percentageStr = "";
+        if (targetPrice > lockPrice) {
+            int256 percentage = calculatePriceIncreasePercentage(
+                lockPrice,
+                targetPrice
+            );
+            percentageStr = string(
+                abi.encodePacked(
+                    " (",
+                    Strings.toString(uint256(percentage)),
+                    "%)"
+                )
+            );
+        }
+
         return
             abi.encodePacked(
                 '<text font-family="Courier New, monospace" font-size="14" font-weight="700" transform="translate(24 248)">',
-                '<tspan fill="#A7A7A7">lock price: </tspan> <tspan fill="#302207">$',
-                lockPriceStr,
+                '<tspan fill="#A7A7A7">lock price: </tspan> <tspan fill="#302207" x="260" text-anchor="end">$',
+                StringUtils.priceToString(lockPrice, oracleDecimals),
                 "</tspan></text>",
                 '<text font-family="Courier New, monospace" font-size="14" font-weight="700" transform="translate(24 272)">',
-                '<tspan fill="#A7A7A7">target price: </tspan> <tspan fill="#302207">',
-                targetPriceStr,
-                '</tspan> <tspan fill="#24C35C">(80,79%)</tspan></text>'
+                '<tspan fill="#A7A7A7">target price: </tspan> <tspan fill="#302207" x="260" text-anchor="end">$',
+                StringUtils.priceToString(targetPrice, oracleDecimals),
+                '</tspan> <tspan fill="#24C35C">',
+                percentageStr,
+                "</tspan></text>"
             );
     }
 
@@ -78,8 +106,9 @@ library PaperWrapper {
         return
             abi.encodePacked(
                 '<text font-family="Courier New, monospace" font-size="14" font-weight="700" transform="translate(24 296)">',
-                '<tspan fill="#A7A7A7">amount: </tspan> <tspan fill="#302207">',
+                '<tspan fill="#A7A7A7">amount: </tspan> <tspan fill="#302207" x="260" text-anchor="end">',
                 amountStr,
+                " ",
                 tokenSymbol,
                 "</tspan></text>",
                 '<text x="21" y="358" font-family="Courier New, monospace" font-weight="700" font-size="16.7" fill="#',
@@ -93,23 +122,17 @@ library PaperWrapper {
     function getPaperProtocolTokenSVG(
         PaperProtocolTokenSVGArgs memory args
     ) internal pure returns (bytes memory) {
-        // Pre-compute string values
-        string memory lockPriceStr = priceToString(
-            args.lockPrice,
-            args.oracleDecimals
-        );
-        string memory targetPriceStr = priceToString(
-            args.targetPrice,
-            args.oracleDecimals
-        );
-        string memory amountStr = amountToString(
+        string memory amountStr = StringUtils.amountToString(
             args.depositAmount,
             args.tokenDecimals
         );
 
-        // Generate SVG parts
         bytes memory header = getSVGHeader(args.borderColor);
-        bytes memory priceText = getPriceText(lockPriceStr, targetPriceStr);
+        bytes memory priceText = getPriceText(
+            args.lockPrice,
+            args.targetPrice,
+            args.oracleDecimals
+        );
         bytes memory amountAndTierText = getAmountAndTierText(
             amountStr,
             args.tokenSymbol,
@@ -117,7 +140,6 @@ library PaperWrapper {
             args.tierTextColor
         );
 
-        // Combine all parts
         return
             abi.encodePacked(
                 header,

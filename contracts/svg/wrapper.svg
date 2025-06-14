@@ -5,20 +5,20 @@
 <g transform="translate(24,248)">
 <text font-family="Courier New, monospace" font-size="14" font-weight="700">
   <tspan fill="#A7A7A7">lock price: </tspan>
-  <tspan fill="#302207">$2325.65</tspan>
+  <tspan fill="#302207" x="260" text-anchor="end">$2325.65</tspan>
 </text>
 </g>
 <g transform="translate(24,272)">
 <text font-family="Courier New, monospace" font-size="14" font-weight="700">
   <tspan fill="#A7A7A7">target price: </tspan>
-  <tspan fill="#302207">$2444</tspan>
+  <tspan fill="#302207" x="260" text-anchor="end">$2444</tspan>
   <tspan fill="#24C35C">(80,79%)</tspan>
 </text>
 </g>
   <g transform="translate(24,296)">
 <text font-family="Courier New, monospace" font-size="14" font-weight="700">
   <tspan fill="#A7A7A7">amount: </tspan>
-  <tspan fill="#302207">0.5 ETH</tspan>
+  <tspan fill="#302207" x="260" text-anchor="end">0.5 ETH</tspan>
 </text>
 </g>
 <text x="21" y="358" font-family="Courier New, monospace" font-weight="700" font-size="16.7" fill="#302207">🧻 Paper Hands Tier</text>

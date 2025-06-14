@@ -64,6 +64,12 @@ contract OracleAdapter is Ownable {
         emit OracleRemoved(token);
     }
 
+    /**
+     * @notice Gets the current price of a token
+     * @param token The address of the token to get the price for
+     * @return price The current price of the token with 18 decimals
+     * @dev Returns 0 for unsupported tokens
+     */
     function getPrice(address token) external view returns (uint256 price) {
         OracleConfig memory config = oracleConfigs[token];
         if (config.oracleAddress == address(0)) revert OracleNotSet(token);
@@ -82,6 +88,14 @@ contract OracleAdapter is Ownable {
 
         // Convert to 18 decimals
         return uint256(answer) * (10 ** (18 - config.decimals));
+    }
+
+    /**
+     * @notice Gets the number of decimals used for price values
+     * @return uint8 The number of decimals (18)
+     */
+    function getDecimals() external pure returns (uint8) {
+        return 18;
     }
 
     function getOracle(
