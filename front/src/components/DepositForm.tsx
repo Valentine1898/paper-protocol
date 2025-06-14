@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
+import { useETHPrice } from "@/hooks/useETHPrice";
 import { createPublicClient, http, formatEther } from "viem";
 import { baseSepolia } from "viem/chains";
 import NFTCard from "./NFTCard";
@@ -47,6 +48,11 @@ interface TokenBalance {
 export default function DepositForm() {
   const { authenticated, user } = usePrivy();
   const paperProtocol = usePaperProtocol();
+  const {
+    price: ethPrice,
+    loading: ethPriceLoading,
+    error: ethPriceError,
+  } = useETHPrice();
   const [isCorrectChain, setIsCorrectChain] = useState(true);
 
   const [selectedToken] = useState(SUPPORTED_TOKENS[0]);
@@ -136,7 +142,7 @@ export default function DepositForm() {
         color: "gold",
         tier: "Smart Hands",
         description:
-          "Calculated risk, calculated reward. You've done your homework and it shows.",
+          "Either you'll have a nice payday or a story about 'that one time.' Solid middle ground, friend.",
       },
       {
         label: "🦾 $7,500",
@@ -147,8 +153,8 @@ export default function DepositForm() {
           "Steel resolve, steel hands. You're not just investing, you're making a statement.",
       },
       {
-        label: "💎 $12,000",
-        value: "12000",
+        label: "💎 $10,000",
+        value: "10000",
         color: "diamond",
         tier: "Diamond Hands",
         description:
@@ -161,33 +167,31 @@ export default function DepositForm() {
     if (!targetPrice) return null;
     const priceNum = parseFloat(targetPrice);
 
+    // Only show tiers for values within our defined ranges
     if (priceNum >= 10000)
       return {
         tier: "Diamond Hands",
         color: "diamond",
         description:
-          "Legendary status. This is the stuff of trading folklore. Respect.",
+          "You're either going to be legendary or become a cautionary tale. Respect.",
       };
     if (priceNum >= 7500)
       return {
         tier: "Strong Hands",
         color: "steel",
         description:
-          "Steel resolve, steel hands. You're not just investing, you're making a statement.",
+          "Either you're about to look like a genius or... well, at least you believed in something big.",
       };
     if (priceNum >= 5000)
       return {
         tier: "Smart Hands",
         color: "gold",
         description:
-          "Calculated risk, calculated reward. You've done your homework and it shows.",
+          "Either you'll have a nice payday or a story about 'that one time.' Solid middle ground, friend.",
       };
-    return {
-      tier: "Paper Hands",
-      color: "paper",
-      description:
-        "Either you'll have a nice payday or a story about 'that one time'. Solid middle ground, friend.",
-    };
+
+    // Return null for values below $5,000 - no tier display
+    return null;
   };
 
   const handleDeposit = async () => {
@@ -231,7 +235,7 @@ export default function DepositForm() {
 
   if (!authenticated) {
     return (
-      <div className="bg-white rounded-2xl border border-paper-200 shadow-sm p-8">
+      <div className="bg-white  border border-paper-200 shadow-sm p-8">
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-paper-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -261,34 +265,46 @@ export default function DepositForm() {
   const currentTier = getCurrentTier();
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+    <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
       {/* Form Section */}
-      <div className="space-y-6">
-        <div className="bg-[#F9F6F1] rounded-2xl border-2 border-paper-200 shadow-sm p-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h3 className="text-display text-2xl font-normal text-primary-900 mb-3">
-              Set target ETH price
-            </h3>
-            <div className="flex items-center space-x-2 text-sm">
-              <div className="w-2 h-2 bg-green-500 animate-pulse"></div>
-              <span className="text-body font-medium text-primary-700">
-                1 ETH ≈ $2,765.65
-              </span>
-            </div>
-          </div>
-
+      <div className="space-y-6 lg:col-span-2">
+        <div className="bg-white    p-9 pt-8 ">
           {/* Price Target Input */}
-          <div className="mb-8">
-            <label className="block text-body text-sm font-semibold text-primary-800 mb-4">
-              Choose your target price
-            </label>
+          <div className="mb-10">
+            <div className="flex items-center justify-between ">
+              <label className="block text-lg font-mono font-bold text-primary-800">
+                Choose your target price
+              </label>
+              <div className="flex items-center space-x-2 text-md">
+                <div
+                  className={`w-2 h-2 ${
+                    ethPriceLoading
+                      ? "bg-yellow-500"
+                      : ethPriceError
+                      ? "bg-red-500"
+                      : "bg-green-500"
+                  } animate-pulse`}
+                ></div>
+                <span className="text-body font-medium text-primary-900">
+                  1 ETH{" "}
+                  <span className="text-primary-900/40">
+                    ≈ $
+                    {ethPriceLoading
+                      ? "..."
+                      : ethPrice.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </span>
+                </span>
+              </div>
+            </div>
 
             {/* Custom Input */}
             <CurrencyInput
               value={targetPrice}
               onChange={setTargetPrice}
-              placeholder="Or enter custom target price"
+              placeholder="Enter custom target price"
               currency="$"
               step="1"
               paddingLeft="pl-10"
@@ -311,34 +327,14 @@ export default function DepositForm() {
             {/* Tier Display */}
             {currentTier && (
               <div
-                className="mt-4 p-4 border-2 transition-all duration-300"
+                className="mt-4 p-4 border-l-4 transition-all duration-300"
                 style={{
                   backgroundColor: `var(--color-${currentTier.color}-50)`,
-                  borderColor: `var(--color-${currentTier.color}-300)`,
+                  borderLeftColor: `var(--color-${currentTier.color}-400)`,
                 }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div
-                    className={`inline-flex items-center space-x-2 px-3 py-1 border ${
-                      tierBadgeVariants[
-                        currentTier.color as keyof typeof tierBadgeVariants
-                      ]
-                    }`}
-                  >
-                    <span className="text-sm font-bold">
-                      {currentTier.tier}
-                    </span>
-                  </div>
-                  <span className="text-xs text-paper-600">
-                    {(
-                      ((parseFloat(targetPrice) - 2765.65) / 2765.65) *
-                      100
-                    ).toFixed(1)}
-                    % increase
-                  </span>
-                </div>
                 <p
-                  className="text-xs italic"
+                  className="text-display text-lg font-normal uppercase tracking-wide"
                   style={{ color: `var(--color-${currentTier.color}-800)` }}
                 >
                   {currentTier.description}
@@ -349,14 +345,14 @@ export default function DepositForm() {
 
           {/* Amount Input */}
           <div className="mb-8">
-            <label className="block text-body text-sm font-semibold text-primary-800 mb-4">
-              Set ETH amount
-            </label>
-            <div className="text-sm text-paper-600 mb-3 flex items-center justify-between">
-              <span>Available balance:</span>
-              <span className="font-mono font-bold">
-                {getCurrentTokenBalance().toFixed(4)} ETH
-              </span>
+            <div className="flex items-center justify-between ">
+              <label className="block text-lg font-mono font-bold text-primary-800 ">
+                Set ETH amount
+              </label>
+              <div className="text-md text-paper-600 mb-3 flex items-center">
+                <span className="pr-2">Available balance:</span>
+                <span>{getCurrentTokenBalance().toFixed(4)} ETH</span>
+              </div>
             </div>
             <CurrencyInput
               value={amount}
@@ -395,7 +391,7 @@ export default function DepositForm() {
               !paperProtocol.isConnected ||
               !isCorrectChain
             }
-            className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-paper-300 disabled:text-paper-500 text-white font-bold py-4 px-6 transition-all duration-200 text-body hover:shadow-lg disabled:hover:shadow-none"
+            className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-paper-300 disabled:text-paper-500 text-white text-2xl font-mono font-bold py-4 px-6 transition-all duration-200 hover:shadow-lg disabled:hover:shadow-none"
           >
             {loading
               ? "Creating Deposit..."
@@ -411,7 +407,7 @@ export default function DepositForm() {
         <NFTCard
           amount={amount}
           targetPrice={targetPrice}
-          lockPrice={2765.65}
+          lockPrice={ethPrice}
         />
       </div>
     </div>
