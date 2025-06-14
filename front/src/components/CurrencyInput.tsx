@@ -28,6 +28,52 @@ export default function CurrencyInput({
     e.currentTarget.blur();
   };
 
+  // Handle input change with validation
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    
+    // Allow empty string for clearing the input
+    if (newValue === '') {
+      onChange('');
+      return;
+    }
+    
+    // Always allow single "0" or numbers ending with "."
+    if (newValue === '0' || newValue.endsWith('.')) {
+      onChange(newValue);
+      return;
+    }
+    
+    // Allow "0.0", "0.00" etc while typing
+    if (/^0\.0+$/.test(newValue)) {
+      onChange(newValue);
+      return;
+    }
+    
+    // Parse the value
+    const numValue = parseFloat(newValue);
+    
+    // Check if it's a valid number
+    if (isNaN(numValue)) {
+      return;
+    }
+    
+    // Apply max constraint immediately
+    if (max !== undefined && numValue > parseFloat(max)) {
+      return;
+    }
+    
+    // Apply min constraint
+    if (min !== undefined && numValue < parseFloat(min)) {
+      // Block values that are clearly below minimum
+      // For example, if min is 0.01, block 0.001, 0.009, etc.
+      return;
+    }
+    
+    // Allow the change
+    onChange(newValue);
+  };
+
   return (
     <div className={`relative ${className}`}>
       {/* Currency Label */}
@@ -41,7 +87,7 @@ export default function CurrencyInput({
       <input
         type="number"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
         placeholder={placeholder}
         step={step}
         min={min}
@@ -69,3 +115,4 @@ export default function CurrencyInput({
     </div>
   );
 }
+

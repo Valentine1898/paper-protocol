@@ -216,20 +216,6 @@ export default function DepositForm() {
       }
     }
 
-    // Validate amount
-    const amountNum = parseFloat(amount);
-    if (amountNum < 0.01) {
-      toast.error("Minimum amount is 0.01 ETH");
-      return;
-    }
-
-    // Validate target price
-    const targetPriceNum = parseFloat(targetPrice);
-    if (targetPriceNum > 222222) {
-      toast.error("Maximum target price is $222,222");
-      return;
-    }
-
     try {
       setLoading(true);
       const loadingToast = toast.loading("Creating deposit...");
@@ -329,6 +315,11 @@ export default function DepositForm() {
               min="1"
               max="222222"
             />
+            {/* Constraint hint */}
+            <div className="mt-2 text-xs text-gray-500">
+              Max: $222,222
+            </div>
+            
             {/* Preset Buttons */}
             <div className="flex gap-4 mb-6 mt-4">
               {getPricePresets().map((preset, index) => (
@@ -383,6 +374,10 @@ export default function DepositForm() {
               paddingLeft="pl-17"
               min="0.01"
             />
+            {/* Constraint hint */}
+            <div className="mt-2 text-xs text-gray-500">
+              Min: 0.01 ETH
+            </div>
           </div>
 
           {/* Network Warning */}
