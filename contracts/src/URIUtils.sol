@@ -41,7 +41,7 @@ library URIUtils {
 {
    "name": "Paper Protocol Deposit #1",
    "description": "A deposit in Paper Protocol",
-   "image": "https://your-domain.com/images/1.png",
+   "image": "https://",
    "attributes": [
       {
          "trait_type": "Token",
