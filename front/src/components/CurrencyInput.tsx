@@ -7,6 +7,8 @@ interface CurrencyInputProps {
   disabled?: boolean;
   className?: string;
   paddingLeft?: string;
+  min?: string;
+  max?: string;
 }
 
 export default function CurrencyInput({
@@ -18,7 +20,14 @@ export default function CurrencyInput({
   disabled = false,
   className = "",
   paddingLeft = "pl-16",
+  min,
+  max,
 }: CurrencyInputProps) {
+  // Disable scroll wheel on number input
+  const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.currentTarget.blur();
+  };
+
   return (
     <div className={`relative ${className}`}>
       {/* Currency Label */}
@@ -35,7 +44,10 @@ export default function CurrencyInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         step={step}
+        min={min}
+        max={max}
         disabled={disabled}
+        onWheel={handleWheel}
         className={`
           w-full 
           ${paddingLeft} pr-4 py-4 

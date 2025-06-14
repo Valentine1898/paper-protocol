@@ -5,6 +5,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
 import NFTCard from "./NFTCard";
+import toast from "react-hot-toast";
 
 // GraphQL query for user's ETH positions
 const USER_ETH_POSITIONS_QUERY = `
@@ -128,12 +129,13 @@ export default function WithdrawForm() {
 
   const handleWithdraw = async (positionId: string) => {
     if (!paperProtocol.isConnected) {
-      alert("Please connect your wallet");
+      toast.error("Please connect your wallet");
       return;
     }
 
     try {
       setWithdrawing(positionId);
+      const loadingToast = toast.loading("Processing withdrawal...");
       
       // Convert position ID to number (assuming it's a numeric string)
       const tokenId = parseInt(positionId);
@@ -141,9 +143,8 @@ export default function WithdrawForm() {
       // Call the withdraw function on the contract
       const hash = await paperProtocol.withdraw(tokenId);
       
-      // Wait for transaction to be mined
-      // We'll need to wait for the transaction using the hash
-      alert(`Transaction submitted! Hash: ${hash}`);
+      toast.dismiss(loadingToast);
+      toast.success(`Withdrawal successful! Transaction: ${hash.slice(0, 10)}...`);
       
       // Refresh positions after a delay
       setTimeout(async () => {
@@ -152,7 +153,7 @@ export default function WithdrawForm() {
       }, 5000);
       
     } catch {
-      alert("Withdrawal failed. Please try again.");
+      toast.error("Withdrawal failed. Please try again.");
       setWithdrawing(null);
     }
   };

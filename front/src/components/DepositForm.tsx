@@ -9,6 +9,7 @@ import { baseSepolia } from "viem/chains";
 import NFTCard from "./NFTCard";
 import PresetButton from "./PresetButton";
 import CurrencyInput from "./CurrencyInput";
+import toast from "react-hot-toast";
 
 // ERC20 ABI for balance checking
 const ERC20_ABI = [
@@ -195,31 +196,56 @@ export default function DepositForm() {
   };
 
   const handleDeposit = async () => {
-    if (!authenticated || !amount || !targetPrice) return;
+    if (!amount || !targetPrice) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (!paperProtocol.isConnected) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+
+    const isCorrectChain = await paperProtocol.isOnCorrectChain();
+    if (!isCorrectChain) {
+      try {
+        await paperProtocol.switchToBaseSepolia();
+      } catch (error) {
+        toast.error("Please switch to Base Sepolia network");
+        return;
+      }
+    }
+
+    // Validate amount
+    const amountNum = parseFloat(amount);
+    if (amountNum < 0.01) {
+      toast.error("Minimum amount is 0.01 ETH");
+      return;
+    }
+
+    // Validate target price
+    const targetPriceNum = parseFloat(targetPrice);
+    if (targetPriceNum > 222222) {
+      toast.error("Maximum target price is $222,222");
+      return;
+    }
 
     try {
       setLoading(true);
-
-      let hash;
-      if (
-        selectedToken.address === "0x0000000000000000000000000000000000000000"
-      ) {
-        hash = await paperProtocol.depositEther(amount, targetPrice);
-      } else {
-        hash = await paperProtocol.depositToken(
-          selectedToken.address,
-          amount,
-          targetPrice
-        );
-      }
-
-      alert(`Deposit transaction sent! Hash: ${hash}`);
+      const loadingToast = toast.loading("Creating deposit...");
+      
+      const tx = await paperProtocol.depositEther(amount, targetPrice);
+      
+      toast.dismiss(loadingToast);
+      toast.success("Deposit created successfully!");
+      
+      // Reset form
       setAmount("");
       setTargetPrice("");
       setTimeout(loadTokenBalances, 2000);
     } catch (error) {
       console.error("Deposit error:", error);
-      alert("Deposit failed. Please try again.");
+      toast.error("Deposit failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -300,6 +326,8 @@ export default function DepositForm() {
               currency="$"
               step="1"
               paddingLeft="pl-10"
+              min="1"
+              max="222222"
             />
             {/* Preset Buttons */}
             <div className="flex gap-4 mb-6 mt-4">
@@ -353,6 +381,7 @@ export default function DepositForm() {
               currency="ETH"
               step="0.001"
               paddingLeft="pl-17"
+              min="0.01"
             />
           </div>
 
