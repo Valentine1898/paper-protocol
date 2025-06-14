@@ -57,7 +57,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {OracleAdapter} from "./OracleAdapter.sol";
-
+import {PaperWrapper} from "./PaperWrapper.sol";
+import {PaperTiers} from "./PaperTiers.sol";
 import {URIUtils} from "./URIUtils.sol";
 
 import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
@@ -85,6 +86,8 @@ contract PaperProtocol is ERC721, Ownable, IPaperProtocol {
     mapping(uint256 => Deposit) public deposits;
 
     OracleAdapter public oracleAdapter;
+    PaperWrapper public paperWrapper;
+    PaperTiers public paperTiers;
 
     uint256 public nextTokenId = 1;
 
@@ -92,7 +95,13 @@ contract PaperProtocol is ERC721, Ownable, IPaperProtocol {
     /*             Constructor              */
     /****************************************/
 
-    constructor() ERC721("Paper Protocol", "PP") Ownable(msg.sender) {}
+    constructor(
+        address paperWrapperAddress,
+        address paperTiersAddress
+    ) ERC721("Paper Protocol", "PP") Ownable(msg.sender) {
+        paperWrapper = PaperWrapper(paperWrapperAddress);
+        paperTiers = PaperTiers(paperTiersAddress);
+    }
 
     /****************************************/
     /*            Owner Functions           */
@@ -214,7 +223,7 @@ contract PaperProtocol is ERC721, Ownable, IPaperProtocol {
 
         Deposit memory dep = deposits[tokenId];
 
-        return URIUtils.tokenURI(tokenId, dep, 18);
+        return URIUtils.tokenURI(tokenId, dep, 18, paperTiers, paperWrapper);
     }
 
     function contractURI() public pure returns (string memory) {

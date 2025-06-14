@@ -8,7 +8,7 @@ import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
 
 import {StringUtils} from "./StringUtils.sol";
 
-library PaperWrapper {
+contract PaperWrapper {
     struct PaperProtocolTokenSVGArgs {
         uint256 lockPrice;
         uint256 targetPrice;
@@ -24,7 +24,7 @@ library PaperWrapper {
 
     function getSVGHeader(
         string memory borderColor
-    ) internal pure returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         return
             abi.encodePacked(
                 '<svg width="304" height="379" fill="none" xmlns="http://www.w3.org/2000/svg">',
@@ -47,7 +47,7 @@ library PaperWrapper {
     function calculatePriceIncreasePercentage(
         uint256 lockPrice,
         uint256 targetPrice
-    ) internal pure returns (int256) {
+    ) public pure returns (int256) {
         if (targetPrice >= lockPrice) {
             return int256(((targetPrice - lockPrice) * 100) / lockPrice);
         } else {
@@ -66,7 +66,7 @@ library PaperWrapper {
         uint256 lockPrice,
         uint256 targetPrice,
         uint256 oracleDecimals
-    ) internal pure returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         string memory percentageStr = "";
         if (targetPrice > lockPrice) {
             int256 percentage = calculatePriceIncreasePercentage(
@@ -102,7 +102,7 @@ library PaperWrapper {
         string memory tokenSymbol,
         string memory tierText,
         string memory tierTextColor
-    ) internal pure returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         return
             abi.encodePacked(
                 '<text font-family="Courier New, monospace" font-size="14" font-weight="700" transform="translate(24 296)">',
@@ -121,7 +121,7 @@ library PaperWrapper {
 
     function getPaperProtocolTokenSVG(
         PaperProtocolTokenSVGArgs memory args
-    ) internal pure returns (bytes memory) {
+    ) public pure returns (bytes memory) {
         string memory amountStr = StringUtils.amountToString(
             args.depositAmount,
             args.tokenDecimals

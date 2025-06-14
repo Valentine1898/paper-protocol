@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Base64} from "lib/openzeppelin-contracts/contracts/utils/Base64.sol";
-import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
-import {IERC20Metadata} from "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
-
 import {PaperTiers} from "./PaperTiers.sol";
 import {PaperWrapper} from "./PaperWrapper.sol";
 import {StringUtils} from "./StringUtils.sol";
@@ -36,9 +35,11 @@ library URIUtils {
 
     function generateTokenSVG(
         IPaperProtocol.Deposit memory deposit,
-        uint256 oracleDecimals
+        uint256 oracleDecimals,
+        PaperTiers paperTiers,
+        PaperWrapper paperWrapper
     ) internal view returns (string memory) {
-        PaperTiers.PaperTierData memory paperTierData = PaperTiers
+        PaperTiers.PaperTierData memory paperTierData = paperTiers
             .getPaperTierData(deposit.priceTarget, oracleDecimals);
 
         PaperWrapper.PaperProtocolTokenSVGArgs
@@ -55,7 +56,7 @@ library URIUtils {
                 paperSVG: paperTierData.paperSVG
             });
 
-        bytes memory fullSvg = PaperWrapper.getPaperProtocolTokenSVG(
+        bytes memory fullSvg = paperWrapper.getPaperProtocolTokenSVG(
             paperWrapperArgs
         );
 
@@ -94,6 +95,62 @@ library URIUtils {
             );
     }
 
+    function generateAttributes(
+        IPaperProtocol.Deposit memory deposit,
+        uint256 oracleDecimals,
+        string memory tierText
+    ) internal view returns (bytes memory) {
+        return
+            abi.encodePacked(
+                generateAttributeItem("Token", getTokenSymbol(deposit.token)),
+                ",",
+                generateAttributeItem(
+                    "Amount",
+                    StringUtils.amountToString(
+                        deposit.amount,
+                        getTokenDecimals(deposit.token)
+                    )
+                ),
+                ",",
+                generateAttributeItem(
+                    "Lock Price",
+                    StringUtils.priceToString(
+                        deposit.priceAtDeposit,
+                        oracleDecimals
+                    )
+                ),
+                ",",
+                generateAttributeItem(
+                    "Price Target",
+                    StringUtils.priceToString(
+                        deposit.priceTarget,
+                        oracleDecimals
+                    )
+                ),
+                ",",
+                generateAttributeItem("Tier", tierText)
+            );
+    }
+
+    function generateTokenMetadata(
+        uint256 tokenId,
+        string memory svgImageURI,
+        bytes memory attributes
+    ) internal pure returns (bytes memory) {
+        return
+            abi.encodePacked(
+                '{"name":"Paper Protocol NFT #',
+                Strings.toString(tokenId),
+                '",',
+                '"image":"',
+                svgImageURI,
+                '",',
+                '"attributes":[',
+                attributes,
+                "]}"
+            );
+    }
+
     /**
      * @notice Generates the token URI for a specific NFT token
      * @param tokenId The ID of the token
@@ -129,9 +186,11 @@ library URIUtils {
     function tokenURI(
         uint256 tokenId,
         IPaperProtocol.Deposit memory deposit,
-        uint256 oracleDecimals
+        uint256 oracleDecimals,
+        PaperTiers paperTiers,
+        PaperWrapper paperWrapper
     ) internal view returns (string memory) {
-        PaperTiers.PaperTierData memory paperTierData = PaperTiers
+        PaperTiers.PaperTierData memory paperTierData = paperTiers
             .getPaperTierData(deposit.priceTarget, oracleDecimals);
 
         PaperWrapper.PaperProtocolTokenSVGArgs
@@ -148,55 +207,23 @@ library URIUtils {
                 paperSVG: paperTierData.paperSVG
             });
 
-        bytes memory fullSvg = PaperWrapper.getPaperProtocolTokenSVG(
+        bytes memory fullSvg = paperWrapper.getPaperProtocolTokenSVG(
             paperWrapperArgs
         );
 
         string memory svgImageURI = svgToImageURI(string(fullSvg));
+        bytes memory attributes = generateAttributes(
+            deposit,
+            oracleDecimals,
+            paperTierData.tierText
+        );
+        bytes memory metadata = generateTokenMetadata(
+            tokenId,
+            svgImageURI,
+            attributes
+        );
 
-        return
-            generateBase64EncodedJSON(
-                abi.encodePacked(
-                    '{"name":"Paper Protocol NFT #',
-                    Strings.toString(tokenId),
-                    '",',
-                    '"image":"',
-                    svgImageURI,
-                    '",',
-                    '"attributes":[',
-                    generateAttributeItem(
-                        "Token",
-                        getTokenSymbol(deposit.token)
-                    ),
-                    ",",
-                    generateAttributeItem(
-                        "Amount",
-                        StringUtils.amountToString(
-                            deposit.amount,
-                            getTokenDecimals(deposit.token)
-                        )
-                    ),
-                    ",",
-                    generateAttributeItem(
-                        "Lock Price",
-                        StringUtils.priceToString(
-                            deposit.priceAtDeposit,
-                            oracleDecimals
-                        )
-                    ),
-                    ",",
-                    generateAttributeItem(
-                        "Price Target",
-                        StringUtils.priceToString(
-                            deposit.priceTarget,
-                            oracleDecimals
-                        )
-                    ),
-                    ",",
-                    generateAttributeItem("Tier", paperTierData.tierText),
-                    "]}"
-                )
-            );
+        return generateBase64EncodedJSON(metadata);
     }
 
     /**
