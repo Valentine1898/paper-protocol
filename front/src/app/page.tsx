@@ -1,4 +1,3 @@
-import Link from "next/link";
 import StartDepositingButton from "@/components/StartDepositingButton";
 import Header from "@/components/Header";
 
@@ -11,14 +10,14 @@ export default function Home() {
           {/* Hero Section */}
           <div className="text-center mb-8 mt-0">
             <h1 className="text-7xl text-display text-gray-900 mb-9">
-              The world's first <br />
-              "target price or nothing" <br />
+              The world&apos;s first <br />
+              &quot;target price or nothing&quot; <br />
               protocol - because compromise <br />
               is for the weak
             </h1>
 
             <div className="flex items-center justify-center w-full text-lg text-gray-900/50 mb-8 font-mono font-bold">
-              We don't just help forge paper hands into diamond hands - we{" "}
+              We don&apos;t just help forge paper hands into diamond hands - we{" "}
               <br />
               guarantee it through smart contract
             </div>

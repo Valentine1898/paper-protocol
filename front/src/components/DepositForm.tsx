@@ -225,14 +225,6 @@ export default function DepositForm() {
     }
   };
 
-  // Tier badge variants
-  const tierBadgeVariants = {
-    paper: "bg-paper-50 text-paper-800 border-paper-300",
-    gold: "bg-gold-50 text-gold-800 border-gold-300",
-    steel: "bg-steel-50 text-steel-800 border-steel-300",
-    diamond: "bg-diamond-50 text-diamond-800 border-diamond-300",
-  };
-
   if (!authenticated) {
     return (
       <div className="bg-white  border border-paper-200 shadow-sm p-8">

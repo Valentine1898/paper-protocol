@@ -77,7 +77,7 @@ export default function EthereumBelieverLeaderboard() {
 
   useEffect(() => {
     fetchData();
-  }, [limit]);
+  }, [limit, fetchData]);
 
   const formatIndex = (value: string) => {
     if (!value || value === "0") return "0";
