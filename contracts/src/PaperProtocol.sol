@@ -1,3 +1,52 @@
+/*
+................................................................................
+................................................................................
+................................................................................
+................................................................................
+.................:::::::::::::::::::::::::::::::::::::::::::::..................
+...............=*++++++++++++++++++++++++++++++++++++++++#%*++*+:...............
+.............:#=........................................*+:....=#-..............
+............-%-........................................#=.......:#=.............
+...........:%-........................................#=.........:%:............
+...........*+........................................=#...........-#............
+..........-%.........................................%:............#=...........
+..........*+........................................+*.............-%...........
+.........:%.........................................%-..............%-..........
+.........=#........................................:%......:-:......+*..........
+.........*+........................................=*.....+#+#+.....-%..........
+.........#-........................................*=....-%=-=%-.....%:.........
+.........%:........................................#-....#*-=-*#.....%-.........
+........:%-....:::....:::....:::....:::...::::...::%:....%=====%.....#-.........
+........:@=-..-===-..-===-..-===:..-===:..-===:..-=@:...:%=====@.....#=.........
+........:%.........................................%:...:%=====@.....#=.........
+........:%.........................................%:....%====+%.....#-.........
+........:%.........................................%-....#*-=-**.....%-.........
+........:%.........................................@=....-%=-=@:.....%:.........
+........:%.........................................@*.....+#*%=.....-%..........
+........:%.........................................@%......:-:......+*..........
+........:%.........................................%@:..............%-..........
+........:%.........................................%%*.............:%...........
+........:%.........................................%+%:............#=...........
+........:%.........................................%=**...........-%............
+........:%.........................................%+=%=..........%-............
+........:%.........................................%+-=%=.......:#=.............
+........:%.........................................%+--=#+.....=#-..............
+........:%.........................................%#****%%*=+*+:...............
+........:%.........................................%-:::::::::..................
+........:%.........................................%:...........................
+........:%.........................................%:...........................
+........:%.........................................%:...........................
+........:%.........................................%:...........................
+........:%.........................................%:...........................
+........:%...:................:................:...%:...........................
+........:%:=***+:..-+**+-..:=*+*=:..-+**+-..:+*+*=:%:...........................
+........:%*=:..-+**+:..:=**+-:..-+**=:..:=**+-..:=*%:...........................
+................................................................................
+................................................................................
+................................................................................
+................................................................................
+*/
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
@@ -8,97 +57,23 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {OracleAdapter} from "./OracleAdapter.sol";
-
+import {PaperWrapper} from "./PaperWrapper.sol";
+import {PaperTiers} from "./PaperTiers.sol";
 import {URIUtils} from "./URIUtils.sol";
+
+import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
 
 /**
  * @title Paper Protocol
  * @notice Paper Protocol is a protocol for locking assests untill target price is reached. While assts are locked user receives dynamic NFT which changes according to your position status.
  * @dev use OracleAdapter to get price of the asset.
  */
-contract PaperProtocol is ERC721, Ownable {
+contract PaperProtocol is ERC721, Ownable, IPaperProtocol {
     using SafeERC20 for IERC20;
-
-    /****************************************/
-    /*               Errors                 */
-    /****************************************/
-
-    error TokenAmountCannotBeZero(address token);
-    error EtherAmountMustBeZeroForTokenDeposit(
-        address token,
-        uint256 etherAmount
-    );
-    error CallerIsNotNFTOwner(address caller, address owner);
-    error TokenAlreadyWithdrawn(uint256 tokenId);
-    error EtherTransferFailed(uint256 tokenId);
-    error PriceTargetNotReached(
-        uint256 tokenId,
-        uint256 targetPrice,
-        uint256 currentPrice
-    );
-
-    /****************************************/
-    /*               Events                 */
-    /****************************************/
-
-    event Deposited(
-        uint256 indexed tokenId,
-        address indexed token,
-        uint256 amount,
-        uint256 priceTarget
-    );
-    event Withdrawn(
-        uint256 indexed tokenId,
-        address indexed token,
-        uint256 amount
-    );
-    event OracleAdapterSet(address indexed oracleAdapter);
-    event PresetSet(
-        address indexed token,
-        uint256 indexed amount,
-        uint256 indexed priceTarget
-    );
-    event PresetRemoved(bytes32 indexed presetId);
-
-    /****************************************/
-    /*               Structs                */
-    /****************************************/
-
-    /**
-     * @notice Preset is a predefined deposit configuration to be able to have unique NFT
-     * @param token address of token to deposit. address(0) for ETH
-     * @param amount amount of token to deposit
-     * @param priceTarget price target to reach to be able to withdraw
-     */
-    struct Preset {
-        address token;
-        uint256 amount;
-        uint256 priceTarget;
-    }
-
-    /**
-     * @notice Deposit is a struct that stores user deposit information
-     * @param token address of token that was deposited. address(0) for ETH
-     * @param amount amount of token that was deposited
-     * @param priceTarget price target to reach to be able to withdraw
-     * @param timestamp timestamp when deposit was made
-     */
-    struct Deposit {
-        address token;
-        uint256 amount;
-        uint256 priceTarget;
-        uint256 timestamp;
-        bool isPreset;
-    }
 
     /****************************************/
     /*            State Variables           */
     /****************************************/
-
-    /**
-     * @notice returns true if it (deposit data) is a preset
-     */
-    mapping(bytes32 presetId => Preset) public presets;
 
     /**
      * @notice returns true if deposit is withdrawn
@@ -111,6 +86,8 @@ contract PaperProtocol is ERC721, Ownable {
     mapping(uint256 => Deposit) public deposits;
 
     OracleAdapter public oracleAdapter;
+    PaperWrapper public paperWrapper;
+    PaperTiers public paperTiers;
 
     uint256 public nextTokenId = 1;
 
@@ -118,7 +95,13 @@ contract PaperProtocol is ERC721, Ownable {
     /*             Constructor              */
     /****************************************/
 
-    constructor() ERC721("Paper Protocol", "PP") Ownable(msg.sender) {}
+    constructor(
+        address paperWrapperAddress,
+        address paperTiersAddress
+    ) ERC721("Paper Protocol", "PP") Ownable(msg.sender) {
+        paperWrapper = PaperWrapper(paperWrapperAddress);
+        paperTiers = PaperTiers(paperTiersAddress);
+    }
 
     /****************************************/
     /*            Owner Functions           */
@@ -129,78 +112,22 @@ contract PaperProtocol is ERC721, Ownable {
         emit OracleAdapterSet(_oracleAdapter);
     }
 
-    function setPresets(Preset[] memory presets_) public onlyOwner {
-        for (uint256 i = 0; i < presets_.length; i++) {
-            presets[
-                getPresetId(
-                    presets_[i].token,
-                    presets_[i].amount,
-                    presets_[i].priceTarget
-                )
-            ] = presets_[i];
-
-            emit PresetSet(
-                presets_[i].token,
-                presets_[i].amount,
-                presets_[i].priceTarget
-            );
-        }
-    }
-
-    function removePresets(bytes32[] memory presetIds) public onlyOwner {
-        for (uint256 i = 0; i < presetIds.length; i++) {
-            delete presets[presetIds[i]];
-            emit PresetRemoved(presetIds[i]);
-        }
-    }
-
-    /****************************************/
-    /*          Pure/view Functions         */
-    /****************************************/
-
-    /**
-     * @notice generate preset id from deposit data
-     */
-    function getPresetId(
-        address token,
-        uint256 amount,
-        uint256 priceTarget
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(token, amount, priceTarget));
-    }
-
-    function getPreset(
-        address token,
-        uint256 amount,
-        uint256 priceTarget
-    ) public view returns (Preset memory) {
-        return presets[getPresetId(token, amount, priceTarget)];
-    }
-
-    function checkIsPreset(Preset memory preset) public pure returns (bool) {
-        return preset.amount != 0 && preset.priceTarget != 0;
-    }
-
     /****************************************/
     /*             User Functions           */
     /****************************************/
 
     /**
-     * @notice deposit token to the protocol
-     * @dev is deposited data is a preset than user will retrieve special NFT
-     * @param token address of token to deposit. address(0) for ETH
-     * @param amount amount of token to deposit
-     * @param priceTarget price target to reach to be able to withdraw
+     * @notice Creates a new deposit with the specified token, amount, and target price
+     * @param token The address of the token to deposit
+     * @param amount The amount of tokens to deposit
+     * @param priceTarget The target price for the deposit
+     * @dev Mints a new NFT token representing the deposit
      */
     function deposit(
         address token,
         uint256 amount,
         uint256 priceTarget
     ) public payable {
-        Preset memory preset = getPreset(token, amount, priceTarget);
-
-        bool isPreset_ = checkIsPreset(preset);
-
         if (token == address(0)) {
             amount = msg.value;
         }
@@ -217,23 +144,26 @@ contract PaperProtocol is ERC721, Ownable {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
 
+        uint256 currentPrice = oracleAdapter.getPrice(token);
+
         deposits[nextTokenId] = Deposit({
             token: token,
             amount: amount,
+            priceAtDeposit: currentPrice,
             priceTarget: priceTarget,
-            timestamp: block.timestamp,
-            isPreset: isPreset_
+            timestamp: block.timestamp
         });
 
         _mint(msg.sender, nextTokenId);
 
+        emit Deposited(nextTokenId, token, amount, priceTarget);
         nextTokenId++;
     }
 
     /**
-     * @notice withdraw token from the protocol
-     * @dev user is only able to withdraw if price target is reached
-     * @param tokenId tokenId of the NFT to withdraw
+     * @notice Withdraws tokens from a deposit
+     * @param tokenId The ID of the NFT token representing the deposit
+     * @dev Burns the NFT token and transfers the deposited tokens back to the owner
      */
     function withdraw(uint256 tokenId) public {
         if (isWithdrawn[tokenId]) {
@@ -289,10 +219,14 @@ contract PaperProtocol is ERC721, Ownable {
     function tokenURI(
         uint256 tokenId
     ) public view override returns (string memory) {
-        return URIUtils._tokenURI(tokenId);
+        _requireOwned(tokenId);
+
+        Deposit memory dep = deposits[tokenId];
+
+        return URIUtils.tokenURI(tokenId, dep, 18, paperTiers, paperWrapper);
     }
 
     function contractURI() public pure returns (string memory) {
-        return URIUtils._contractURI();
+        return URIUtils.contractURI();
     }
 }

@@ -5,6 +5,8 @@ import {Script} from "forge-std/Script.sol";
 import {MockOracle} from "test/mocks/MockOracle.sol";
 import {OracleAdapter} from "src/OracleAdapter.sol";
 import {PaperProtocol} from "src/PaperProtocol.sol";
+import {PaperWrapper} from "src/PaperWrapper.sol";
+import {PaperTiers} from "src/PaperTiers.sol";
 
 library Deployer {
     function deployMockOracle() internal returns (MockOracle) {
@@ -18,7 +20,9 @@ library Deployer {
     }
 
     function deployPaperProtocol() internal returns (PaperProtocol) {
-        return new PaperProtocol();
+        PaperWrapper wrapper = new PaperWrapper();
+        PaperTiers tiers = new PaperTiers();
+        return new PaperProtocol(address(wrapper), address(tiers));
     }
 
     function setupOracleAdapter(
@@ -35,6 +39,13 @@ library Deployer {
         adapter.setOracle(address(0), config);
     }
 
+    function setupPaperProtocol(
+        PaperProtocol protocol,
+        OracleAdapter adapter
+    ) internal {
+        protocol.setOracleAdapter(address(adapter));
+    }
+
     function deploy()
         internal
         returns (
@@ -46,5 +57,8 @@ library Deployer {
         oracle = deployMockOracle();
         adapter = deployOracleAdapter();
         protocol = deployPaperProtocol();
+
+        setupOracleAdapter(adapter, oracle);
+        setupPaperProtocol(protocol, adapter);
     }
 }

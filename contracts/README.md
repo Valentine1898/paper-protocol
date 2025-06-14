@@ -23,7 +23,11 @@ Paper Protocol is a smart contract that allows you to lock assets until asset ta
 - Locking assets
 - Chainlink-like PUSH oracles integration
 - Dynamic NFT
-- Presets for special NFTs
+- The bigger target price, the cooler NFT😎
+
+## About dynamic NFTs
+
+Dynamic NFTs are generated using SVG and JSON which then are converted to base64 encoded string. NFT contains such data as price at deposit, price target, amount, token symbol, tier, etc. Which higher target price your tier changes from paper to diamond💎. Those tiers also changes general look of NFT with unique styles.
 
 ## Contracts Overview
 
@@ -51,31 +55,7 @@ Contract that handles all URI logic. It is used to convert json with SVG and oth
 ### Base Sepolia
 
 ```
-Mock Token:  0xE130Ec9bB21e477E2822E940aDB1A43767A0F80a
-Mock Token Oracle:  0x64A59090cB7bdA0c18cD4AD71203Cef957bA6ffE
-ETH Oracle:  0xB540Cd825c455711b075073Ef7C74b86B3ab9f4b
-Adapter:  0x5C793701fA61433385071961f6bF8748c98c5ca9
-Protocol:  0x14C59Ba26193C65d256C41f1077c8867eB41c805
-
-Mock Token Presets:
-Preset 1
-Amount: 100000000000000000000
-Price Target: 1500000000000000000
-Preset 2
-Amount: 100000000000000000000
-Price Target: 2000000000000000000
-Preset 3
-Amount: 100000000000000000000
-Price Target: 3000000000000000000
-
-ETH Presets:
-Preset 1
-Amount: 1000000000000000
-Price Target: 3000000000000000000000
-Preset 2
-Amount: 10000000000000000
-Price Target: 4000000000000000000000
-Preset 3
-Amount: 50000000000000000
-Price Target: 6000000000000000000000
+Adapter:  0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1
+Protocol:  0x32730feaBb33d0C430d37a5141AC7f98086Ac643
+Mock ETH Oracle:  0x72eF41388F6e3bd656A63212C85DCb4EB85E6DfF
 ```

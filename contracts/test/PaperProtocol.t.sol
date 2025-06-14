@@ -17,6 +17,7 @@ contract PaperProtocolTest is Setup {
     uint256 public constant INITIAL_BALANCE = 1000 ether;
     uint256 public constant DEPOSIT_AMOUNT = 100 ether;
     uint256 public constant PRICE_TARGET = 2500 ether;
+    uint256 public constant INITIAL_PRICE = 2000 ether; // Lower than PRICE_TARGET
 
     function setUp() public override {
         vm.startPrank(owner);
@@ -47,18 +48,11 @@ contract PaperProtocolTest is Setup {
         );
 
         // Set initial price for both token and ETH
-        mockOracle.setPrice(int256(3000e8)); // $3000 with 8 decimals
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256(INITIAL_PRICE / 1e10)); // Convert to 8 decimals
 
         // Set oracle adapter in PaperProtocol
         paperProtocol.setOracleAdapter(address(oracleAdapter));
-
-        PaperProtocol.Preset[] memory presets = new PaperProtocol.Preset[](1);
-        presets[0] = PaperProtocol.Preset({
-            token: address(mockToken),
-            amount: DEPOSIT_AMOUNT,
-            priceTarget: PRICE_TARGET
-        });
-        paperProtocol.setPresets(presets);
 
         vm.stopPrank();
 
@@ -78,14 +72,14 @@ contract PaperProtocolTest is Setup {
         (
             address token,
             uint256 amount,
+            uint256 priceAtDeposit,
             uint256 priceTarget,
-            ,
-            bool isPreset
+
         ) = paperProtocol.deposits(1);
         assertEq(token, address(mockToken));
         assertEq(amount, DEPOSIT_AMOUNT);
+        assertEq(priceAtDeposit, INITIAL_PRICE);
         assertEq(priceTarget, PRICE_TARGET);
-        assertTrue(isPreset);
         vm.stopPrank();
     }
 
@@ -102,14 +96,14 @@ contract PaperProtocolTest is Setup {
         (
             address token,
             uint256 amount,
+            uint256 priceAtDeposit,
             uint256 priceTarget,
-            ,
-            bool isPreset
+
         ) = paperProtocol.deposits(1);
         assertEq(token, address(0));
         assertEq(amount, DEPOSIT_AMOUNT);
+        assertEq(priceAtDeposit, INITIAL_PRICE);
         assertEq(priceTarget, PRICE_TARGET);
-        assertFalse(isPreset);
         vm.stopPrank();
     }
 
@@ -119,10 +113,9 @@ contract PaperProtocolTest is Setup {
         paperProtocol.deposit(address(mockToken), DEPOSIT_AMOUNT, PRICE_TARGET);
         vm.stopPrank();
 
-        // Debug prints
-        uint256 currentPrice = oracleAdapter.getPrice(address(mockToken));
-        console.log("Current price from oracle:", currentPrice);
-        console.log("Price target:", PRICE_TARGET);
+        // Set price above target to allow withdrawal
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256(PRICE_TARGET / 1e10)); // Convert to 8 decimals
 
         vm.startPrank(alice);
         uint256 initialBalance = mockToken.balanceOf(alice);
@@ -141,10 +134,9 @@ contract PaperProtocolTest is Setup {
         );
         vm.stopPrank();
 
-        // Debug prints
-        uint256 currentPrice = oracleAdapter.getPrice(address(0));
-        console.log("Current price from oracle:", currentPrice);
-        console.log("Price target:", PRICE_TARGET);
+        // Set price above target to allow withdrawal
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256(PRICE_TARGET / 1e10)); // Convert to 8 decimals
 
         vm.startPrank(alice);
         uint256 initialBalance = alice.balance;
@@ -160,7 +152,10 @@ contract PaperProtocolTest is Setup {
         paperProtocol.deposit(address(mockToken), DEPOSIT_AMOUNT, PRICE_TARGET);
         vm.stopPrank();
 
-        mockOracle.setPrice(int256(2000e8)); // $2000, 8 decimals
+        // Set price below target
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256((PRICE_TARGET * 9) / 10 / 1e10)); // 10% below target, converted to 8 decimals
+
         vm.startPrank(alice);
         paperProtocol.withdraw(1);
     }
@@ -171,7 +166,10 @@ contract PaperProtocolTest is Setup {
         paperProtocol.deposit(address(mockToken), DEPOSIT_AMOUNT, PRICE_TARGET);
         vm.stopPrank();
 
-        mockOracle.setPrice(int256(3000e8));
+        // Set price above target
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256(PRICE_TARGET / 1e10)); // Convert to 8 decimals
+
         vm.startPrank(bob);
         paperProtocol.withdraw(1);
     }
@@ -182,7 +180,10 @@ contract PaperProtocolTest is Setup {
         paperProtocol.deposit(address(mockToken), DEPOSIT_AMOUNT, PRICE_TARGET);
         vm.stopPrank();
 
-        mockOracle.setPrice(int256(3000e8));
+        // Set price above target
+        // OracleAdapter converts 8 decimals to 18 decimals internally
+        mockOracle.setPrice(int256(PRICE_TARGET / 1e10)); // Convert to 8 decimals
+
         vm.startPrank(alice);
         paperProtocol.withdraw(1);
         paperProtocol.withdraw(1);
@@ -201,23 +202,5 @@ contract PaperProtocolTest is Setup {
             DEPOSIT_AMOUNT,
             PRICE_TARGET
         );
-    }
-
-    function test_RemovePresets() public {
-        vm.startPrank(owner);
-        bytes32[] memory presetIds = new bytes32[](1);
-        presetIds[0] = paperProtocol.getPresetId(
-            address(mockToken),
-            DEPOSIT_AMOUNT,
-            PRICE_TARGET
-        );
-        paperProtocol.removePresets(presetIds);
-        PaperProtocol.Preset memory preset = paperProtocol.getPreset(
-            address(mockToken),
-            DEPOSIT_AMOUNT,
-            PRICE_TARGET
-        );
-        assertFalse(paperProtocol.checkIsPreset(preset));
-        vm.stopPrank();
     }
 }
