@@ -3,20 +3,13 @@
 import { useState, useEffect } from "react";
 import { formatEther } from "viem";
 
-// GraphQL query for the simplified Ethereum Believer Index
-const ETHEREUM_BELIEVER_INDEX_QUERY = `
-  query GetEthereumBelieverIndex {
-    ethereumBelieverIndex(id: "global") {
-      totalIndex
-      activePositions
-      totalEthLocked
-      lastUpdatedBlock
-      lastUpdatedTimestamp
-    }
+// GraphQL query for the leaderboard
+const ETHEREUM_BELIEVER_LEADERBOARD_QUERY = `
+  query GetEthereumBelieverLeaderboard {
     ethPositions(
       where: { isActive: true }
-      first: 10
-      orderBy: createdTimestamp
+      first: 100
+      orderBy: positionValue
       orderDirection: desc
     ) {
       id
@@ -30,14 +23,7 @@ const ETHEREUM_BELIEVER_INDEX_QUERY = `
   }
 `;
 
-interface IndexData {
-  ethereumBelieverIndex?: {
-    totalIndex: string;
-    activePositions: number;
-    totalEthLocked: string;
-    lastUpdatedBlock: string;
-    lastUpdatedTimestamp: string;
-  };
+interface LeaderboardData {
   ethPositions: Array<{
     id: string;
     depositor: string;
@@ -50,10 +36,10 @@ interface IndexData {
 }
 
 const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 
-  "https://api.studio.thegraph.com/query/113895/paper-protocol/v0.0.9";
+  "https://api.studio.thegraph.com/query/113895/paper-protocol/v0.0.11";
 
 export default function EthereumBelieverIndex() {
-  const [data, setData] = useState<IndexData | null>(null);
+  const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +52,7 @@ export default function EthereumBelieverIndex() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: ETHEREUM_BELIEVER_INDEX_QUERY,
+          query: ETHEREUM_BELIEVER_LEADERBOARD_QUERY,
         }),
       });
 
@@ -83,7 +69,7 @@ export default function EthereumBelieverIndex() {
       setData(result.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching Ethereum Believer Index:", err);
+      console.error("Error fetching leaderboard:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
@@ -115,22 +101,65 @@ export default function EthereumBelieverIndex() {
     return numValue.toFixed(4);
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(parseInt(timestamp) * 1000);
-    return date.toLocaleString();
+  const formatAddress = (address: string) => {
+    // ENS mapping with addresses in lowercase for easier matching
+    const ensMap: { [key: string]: string } = {
+      '0xe4984b5c26eeb6c3d5832cea6e0b38e8ffa2ef2e': 'tosic.eth',
+      '0x4ffac681fae75170e96e8087b848e9ec4f4ca871': 'velaskes.eth',
+      '0x163bceef1e94f3d82d0122f8791e9e5f214d438c': 'kolom.eth',
+    };
+    
+    const lowerAddress = address.toLowerCase();
+    return ensMap[lowerAddress] || `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  // Group positions by depositor for leaderboard
+  const getLeaderboard = () => {
+    if (!data?.ethPositions) return [];
+    
+    const walletMap = new Map<string, {
+      depositor: string;
+      totalPositionValue: bigint;
+      positionsCount: number;
+      totalEthLocked: bigint;
+      positions: typeof data.ethPositions;
+    }>();
+    
+    data.ethPositions.forEach((position) => {
+      const existing = walletMap.get(position.depositor) || {
+        depositor: position.depositor,
+        totalPositionValue: BigInt(0),
+        positionsCount: 0,
+        totalEthLocked: BigInt(0),
+        positions: []
+      };
+      
+      existing.totalPositionValue += BigInt(position.positionValue);
+      existing.positionsCount += 1;
+      existing.totalEthLocked += BigInt(position.amount);
+      existing.positions.push(position);
+      
+      walletMap.set(position.depositor, existing);
+    });
+    
+    return Array.from(walletMap.values())
+      .sort((a, b) => {
+        if (a.totalPositionValue > b.totalPositionValue) return -1;
+        if (a.totalPositionValue < b.totalPositionValue) return 1;
+        return 0;
+      });
   };
 
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="space-y-3">
+            <div className="h-10 bg-gray-100 rounded"></div>
+            <div className="h-10 bg-gray-100 rounded"></div>
+            <div className="h-10 bg-gray-100 rounded"></div>
+          </div>
         </div>
       </div>
     );
@@ -139,7 +168,7 @@ export default function EthereumBelieverIndex() {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
-        <div className="text-red-800 font-semibold mb-2">Error Loading Index</div>
+        <div className="text-red-800 font-semibold mb-2">Error Loading Leaderboard</div>
         <div className="text-red-600 text-sm">{error}</div>
         <button
           onClick={fetchData}
@@ -151,100 +180,79 @@ export default function EthereumBelieverIndex() {
     );
   }
 
-  const indexData = data?.ethereumBelieverIndex;
-  const positions = data?.ethPositions || [];
+  const leaderboard = getLeaderboard();
+
+  if (leaderboard.length === 0) {
+    return (
+      <div className="bg-gray-50 p-8 rounded-lg text-center">
+        <div className="text-gray-600">No active ETH positions yet.</div>
+        <div className="text-sm text-gray-500 mt-2">Be the first believer!</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Main Index Display */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-xl shadow-lg border">
-        <div className="text-center">
-          <div className="text-sm font-semibold text-indigo-600 uppercase tracking-wide mb-2">
-            Ethereum Believer Index
-          </div>
-          <div className="text-4xl font-bold text-indigo-900 mb-2">
-            Ξ {formatIndex(indexData?.totalIndex || "0")}
-          </div>
-          <div className="text-sm text-indigo-700">
-            Total value of all ETH positions (amount × target price)
-          </div>
-        </div>
-      </div>
-
-      {/* Key Metrics */}
-      {indexData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="text-sm font-semibold text-gray-600 mb-1">Active Positions</div>
-            <div className="text-2xl font-bold text-purple-600">
-              {indexData.activePositions}
-            </div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="text-sm font-semibold text-gray-600 mb-1">Total ETH Locked</div>
-            <div className="text-2xl font-bold text-orange-600">
-              Ξ {formatIndex(indexData.totalEthLocked)}
-            </div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="text-sm font-semibold text-gray-600 mb-1">Last Updated</div>
-            <div className="text-sm font-mono text-gray-700">
-              Block #{indexData.lastUpdatedBlock}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Recent Positions */}
-      {positions.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent ETH Positions</h3>
-          <div className="space-y-3">
-            {positions.map((position) => (
-              <div key={position.id} className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-800">
-                      {formatAddress(position.depositor)}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {formatTimestamp(position.createdTimestamp)}
-                    </div>
+    <div className="bg-white p-6 rounded-lg shadow border">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6">🏆 ETH Believer Leaderboard</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b-2 border-gray-200">
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">Rank</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">Wallet</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">Believer Index</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">ETH Locked</th>
+              <th className="text-center py-3 px-4 font-semibold text-gray-700">Positions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaderboard.map((wallet, index) => (
+              <tr key={wallet.depositor} className="border-b hover:bg-gray-50 transition-colors">
+                <td className="py-3 px-4">
+                  <div className="flex items-center space-x-2">
+                    {index === 0 && <span className="text-2xl">🥇</span>}
+                    {index === 1 && <span className="text-2xl">🥈</span>}
+                    {index === 2 && <span className="text-2xl">🥉</span>}
+                    {index > 2 && <span className="text-gray-600 font-medium text-lg">{index + 1}</span>}
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold text-gray-800">
-                    Ξ {formatIndex(position.amount)}
+                </td>
+                <td className="py-3 px-4">
+                  {(() => {
+                    const displayName = formatAddress(wallet.depositor);
+                    const isEns = displayName.endsWith('.eth');
+                    return (
+                      <a 
+                        href={`https://sepolia.basescan.io/address/${wallet.depositor}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`hover:text-blue-800 text-sm ${
+                          isEns 
+                            ? 'text-indigo-600 font-semibold' 
+                            : 'text-blue-600 font-mono'
+                        }`}
+                      >
+                        {displayName}
+                      </a>
+                    );
+                  })()}
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <div className="font-bold text-gray-800">
+                    Ξ {formatIndex(wallet.totalPositionValue.toString())}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    Target: ${parseInt(position.targetPrice) / 1e18}
-                  </div>
-                </div>
-              </div>
+                </td>
+                <td className="py-3 px-4 text-right text-gray-600">
+                  Ξ {formatIndex(wallet.totalEthLocked.toString())}
+                </td>
+                <td className="py-3 px-4 text-center">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {wallet.positionsCount}
+                  </span>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Explanation */}
-      <div className="bg-gray-50 p-6 rounded-lg border">
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">What is the Ethereum Believer Index?</h4>
-        <div className="text-sm text-gray-600 space-y-2">
-          <p>
-            The Ethereum Believer Index measures the collective bullish sentiment for ETH in the Paper Protocol.
-            It's calculated as the sum of all active ETH positions:
-          </p>
-          <p className="font-mono bg-white p-2 rounded border">
-            Index = Σ(ETH Amount × Target Price)
-          </p>
-          <p>
-            A higher index indicates stronger collective belief in ETH's future price appreciation.
-            Each position represents a user's conviction that ETH will reach their target price.
-          </p>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -11,6 +11,10 @@ import { BigInt, Address, log } from "@graphprotocol/graph-ts"
 // ETH token address (zero address)
 const ETH_ADDRESS = Address.zero()
 
+// Constants for decimal calculations
+const DECIMALS = 18
+const DECIMAL_FACTOR = BigInt.fromString("1000000000000000000") // 10^18
+
 // Helper function to get or create the global index
 function getOrCreateIndex(): EthereumBelieverIndex {
   let index = EthereumBelieverIndex.load("global")
@@ -37,8 +41,9 @@ export function handleDeposited(event: Deposited): void {
     return
   }
   
-  // Calculate position value
-  let positionValue = amount.times(targetPrice)
+  // Calculate position value with proper decimal handling
+  // positionValue = (amount * targetPrice) / 10^18
+  let positionValue = amount.times(targetPrice).div(DECIMAL_FACTOR)
   
   // Create position entity
   let position = new EthPosition(tokenId.toString())

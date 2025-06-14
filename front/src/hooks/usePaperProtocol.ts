@@ -13,7 +13,7 @@ interface WalletError {
 const PAPER_PROTOCOL_ABI = PaperProtocolABI.abi;
 
 // Real contract addresses on Base Sepolia
-const CONTRACT_ADDRESS = '0x14C59Ba26193C65d256C41f1077c8867eB41c805' as const;
+const CONTRACT_ADDRESS = '0x32730feaBb33d0C430d37a5141AC7f98086Ac643' as const;
 
 export interface Deposit {
   token: string;

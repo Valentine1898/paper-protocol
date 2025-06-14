@@ -6,45 +6,34 @@ import { formatEther } from "viem";
 // GraphQL query for Ethereum Believer Index leaderboard
 const ETHEREUM_BELIEVER_LEADERBOARD_QUERY = `
   query GetEthereumBelieverLeaderboard($first: Int!) {
-    users(
-      where: { ethereumBelieverIndex_gt: "0" }
-      orderBy: ethereumBelieverIndex
+    ethPositions(
+      orderBy: positionValue
       orderDirection: desc
       first: $first
     ) {
       id
-      ethereumBelieverIndex
-      activeEthPositions
-      totalEthLocked
-      totalLocks
-      successfulPredictions
-      failedPredictions
-      successRate
-      firstSeenAt
-      lastSeenAt
+      depositor
+      amount
+      targetPrice
+      positionValue
     }
   }
 `;
 
-interface LeaderboardUser {
+interface EthPosition {
   id: string;
-  ethereumBelieverIndex: string;
-  activeEthPositions: number;
-  totalEthLocked: string;
-  totalLocks: number;
-  successfulPredictions: number;
-  failedPredictions: number;
-  successRate: string;
-  firstSeenAt: string;
-  lastSeenAt: string;
+  depositor: string;
+  amount: string;
+  targetPrice: string;
+  positionValue: string;
 }
 
 interface LeaderboardData {
-  users: LeaderboardUser[];
+  ethPositions: EthPosition[];
 }
 
 const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 
-  "https://api.studio.thegraph.com/query/113895/paper-protocol/v0.0.8";
+  "https://api.studio.thegraph.com/query/113895/paper-protocol/v0.0.11";
 
 export default function EthereumBelieverLeaderboard() {
   const [data, setData] = useState<LeaderboardData | null>(null);
@@ -108,6 +97,35 @@ export default function EthereumBelieverLeaderboard() {
   };
 
   const formatAddress = (address: string) => {
+    // ENS mapping with addresses in lowercase for easier matching
+    const ensMap: { [key: string]: string } = {
+      '0xe4984b5c26eeb6c3d5832cea6e0b38e8ffa2ef2e': 'tosic.eth',
+      '0x4ffac681fae75170e96e8087b848e9ec4f4ca871': 'velaskes.eth',
+      '0x163bceef1e94f3d82d0122f8791e9e5f214d438c': 'kolom.eth',
+    };
+    
+    console.log('=== formatAddress Debug ===');
+    console.log('Original address:', address);
+    console.log('Address type:', typeof address);
+    console.log('Address length:', address.length);
+    
+    const lowerAddress = address.toLowerCase();
+    console.log('Lowercase address:', lowerAddress);
+    
+    console.log('Available ENS addresses:', Object.keys(ensMap));
+    console.log('Exact match check:', ensMap[lowerAddress]);
+    console.log('Has property check:', ensMap.hasOwnProperty(lowerAddress));
+    
+    // Try to find exact match
+    for (const [ensAddress, ensName] of Object.entries(ensMap)) {
+      console.log(`Comparing "${lowerAddress}" with "${ensAddress}":`, lowerAddress === ensAddress);
+      if (lowerAddress === ensAddress) {
+        console.log('🎉 Found ENS match:', ensName);
+        return ensName;
+      }
+    }
+    
+    console.log('❌ No ENS match found, returning truncated address');
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -157,7 +175,37 @@ export default function EthereumBelieverLeaderboard() {
     );
   }
 
-  const users = data?.users || [];
+  // Group positions by depositor and calculate total believer index
+  const positions = data?.ethPositions || [];
+  console.log('Raw positions from subgraph:', positions);
+  
+  const userStats = positions.reduce((acc: any, position: EthPosition) => {
+    const depositor = position.depositor;
+    if (!acc[depositor]) {
+      acc[depositor] = {
+        depositor,
+        totalBelieverIndex: BigInt(0),
+        totalEthLocked: BigInt(0),
+        positionCount: 0
+      };
+    }
+    
+    acc[depositor].totalBelieverIndex += BigInt(position.positionValue);
+    acc[depositor].totalEthLocked += BigInt(position.amount);
+    acc[depositor].positionCount += 1;
+    
+    return acc;
+  }, {});
+
+  const users = Object.values(userStats)
+    .sort((a: any, b: any) => {
+      if (a.totalBelieverIndex > b.totalBelieverIndex) return -1;
+      if (a.totalBelieverIndex < b.totalBelieverIndex) return 1;
+      return 0;
+    })
+    .slice(0, limit);
+
+  console.log('Processed users:', users);
 
   return (
     <div className="bg-white rounded-xl shadow-lg border overflow-hidden">
@@ -196,30 +244,24 @@ export default function EthereumBelieverLeaderboard() {
                 Believer Index
               </th>
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ETH Positions
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ETH Locked
               </th>
               <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Success Rate
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                First Seen
+                Positions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                   No users with ETH positions found
                 </td>
               </tr>
             ) : (
-              users.map((user, index) => (
+              users.map((user: any, index: number) => (
                 <tr
-                  key={user.id}
+                  key={user.depositor}
                   className={`hover:bg-gray-50 ${
                     index < 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : ''
                   }`}
@@ -232,36 +274,33 @@ export default function EthereumBelieverLeaderboard() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 font-mono">
-                      {formatAddress(user.id)}
-                    </div>
+                    {(() => {
+                      const displayName = formatAddress(user.depositor);
+                      const isEns = displayName.endsWith('.eth');
+                      return (
+                        <div className={`text-sm font-medium ${
+                          isEns 
+                            ? 'text-indigo-600 font-semibold' 
+                            : 'text-gray-900 font-mono'
+                        }`}>
+                          {displayName}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-lg font-bold text-indigo-600">
-                      Ξ {formatIndex(user.ethereumBelieverIndex)}
+                      Ξ {formatIndex(user.totalBelieverIndex.toString())}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {user.activeEthPositions} active
+                      Ξ {formatIndex(user.totalEthLocked.toString())}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      Ξ {formatIndex(user.totalEthLocked)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {user.totalLocks > 0 ? 
-                        `${(parseFloat(user.successRate)).toFixed(1)}%` : 
-                        'N/A'
-                      }
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {formatTimestamp(user.firstSeenAt)}
+                      {user.positionCount}
                     </div>
                   </td>
                 </tr>
