@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { formatEther, parseEther } from "viem";
+import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
 import NFTCard from "./NFTCard";
 
@@ -36,10 +36,6 @@ interface EthPosition {
   transactionHash: string;
 }
 
-interface PositionsData {
-  ethPositions: EthPosition[];
-}
-
 const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 
   "https://api.studio.thegraph.com/query/113895/paper-protocol/latest";
 
@@ -62,7 +58,7 @@ export default function WithdrawForm() {
         );
         const data = await response.json();
         setEthPrice(data.ethereum.usd);
-      } catch (error) {
+      } catch {
         setEthPrice(3000); // Fallback price
       } finally {
         setEthPriceLoading(false);
@@ -75,7 +71,7 @@ export default function WithdrawForm() {
   }, []);
 
   // Fetch user's positions
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     if (!user?.wallet?.address) return;
 
     try {
@@ -102,18 +98,18 @@ export default function WithdrawForm() {
       }
 
       setPositions(result.data.ethPositions || []);
-    } catch (error) {
+    } catch {
       // Silently handle error
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.wallet?.address]);
 
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
       fetchPositions();
     }
-  }, [authenticated, user?.wallet?.address]);
+  }, [authenticated, user?.wallet?.address, fetchPositions]);
 
   const formatAmount = (value: string) => {
     const ethValue = formatEther(BigInt(value));
@@ -155,7 +151,7 @@ export default function WithdrawForm() {
         setWithdrawing(null);
       }, 5000);
       
-    } catch (error) {
+    } catch {
       alert("Withdrawal failed. Please try again.");
       setWithdrawing(null);
     }
@@ -215,7 +211,7 @@ export default function WithdrawForm() {
             No Active Positions
           </h3>
           <p className="text-gray-600">
-            You don't have any active ETH positions yet.
+            You don&apos;t have any active ETH positions yet.
           </p>
         </div>
       </div>

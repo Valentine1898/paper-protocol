@@ -1,6 +1,7 @@
 import StartDepositingButton from "@/components/StartDepositingButton";
 import Header from "@/components/Header";
 import EthereumBelieverIndex from "@/components/EthereumBelieverIndex";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -25,11 +26,12 @@ export default function Home() {
 
             <StartDepositingButton className=" mb-28" />
             <div className="flex items-center justify-center w-full text-2xl text-gray-900 mb-20 font-mono font-bold">
-              <img
+              <Image
                 src="/diamond-icon.svg"
                 alt="Paper Protocol"
-                className="h-12
-                 hover:opacity-80 transition-opacity duration-200"
+                width={48}
+                height={48}
+                className="hover:opacity-80 transition-opacity duration-200"
               />
             </div>
           </div>
