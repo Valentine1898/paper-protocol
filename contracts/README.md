@@ -57,5 +57,5 @@ Contract that handles all URI logic. It is used to convert json with SVG and oth
 ```
 Adapter:  0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1
 Protocol:  0x32730feaBb33d0C430d37a5141AC7f98086Ac643
-Mock ETH Oracle:  0x72eF41388F6e3bd656A63212C85DCb4EB85E6DfF
+Mock ETH Oracle:  0x207028099EF549f588Fa578519FD4bC087B95E32
 ```
