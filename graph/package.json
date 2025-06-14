@@ -14,7 +14,8 @@
     "test": "graph test",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
     "prepare:polygon": "mustache config/polygon.json subgraph.template.yaml > subgraph.yaml",
-    "prepare:arbitrum": "mustache config/arbitrum.json subgraph.template.yaml > subgraph.yaml"
+    "prepare:arbitrum": "mustache config/arbitrum.json subgraph.template.yaml > subgraph.yaml",
+    "prepare:base-sepolia": "mustache config/base-sepolia.json subgraph.template.yaml > subgraph.yaml"
   },
   "keywords": [
     "thegraph",

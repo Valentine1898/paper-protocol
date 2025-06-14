@@ -17,30 +17,21 @@ dataSources:
         - User
         - Lock
         - Token
-        - NFT
         - ProtocolStats
         - DailyStats
-        - Partner
-        - AirdropCampaign
         - UserActivity
-        - LeaderboardEntry
-        - PriceUpdate
       abis:
         - name: PaperProtocol
           file: ./abis/PaperProtocol.json
         - name: ERC20
           file: ./abis/ERC20.json
       eventHandlers:
-        - event: TokenLocked(indexed address,indexed address,uint256,uint256,uint256)
-          handler: handleTokenLocked
-        - event: TokenUnlocked(indexed address,indexed address,uint256,bool)
-          handler: handleTokenUnlocked
-        - event: NFTMinted(indexed address,indexed uint256,uint8,uint256)
-          handler: handleNFTMinted
-        - event: PartnerAdded(indexed address,string)
-          handler: handlePartnerAdded
-        - event: AirdropCampaignCreated(indexed address,indexed uint256,string)
-          handler: handleAirdropCampaignCreated
-        - event: PriceTargetReached(indexed address,indexed address,uint256,uint256)
-          handler: handlePriceTargetReached
+        - event: Deposited(indexed uint256,indexed address,uint256,uint256)
+          handler: handleDeposited
+        - event: Withdrawn(indexed uint256,indexed address,uint256)
+          handler: handleWithdrawn
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
       file: ./src/mapping.ts 

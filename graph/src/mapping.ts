@@ -1,5 +1,6 @@
 import {
   Deposited,
+  Withdrawn,
   Transfer,
   OwnershipTransferred
 } from "../generated/PaperProtocol/PaperProtocol"
@@ -118,8 +119,8 @@ export function handleDeposited(event: Deposited): void {
   let user = getOrCreateUser(userAddress);
   let token = getOrCreateToken(tokenAddress);
   
-  // Create lock entity
-  let lockId = event.transaction.hash.concatI32(event.logIndex.toI32());
+  // Create lock entity using tokenId as the ID
+  let lockId = Bytes.fromI32(tokenId.toI32());
   let lock = new Lock(lockId);
   lock.user = user.id;
   lock.token = token.id;
@@ -214,4 +215,71 @@ export function handleOwnershipTransferred(event: OwnershipTransferred): void {
     event.params.previousOwner.toHexString(),
     event.params.newOwner.toHexString()
   ]);
+}
+
+export function handleWithdrawn(event: Withdrawn): void {
+  let tokenId = event.params.tokenId;
+  let tokenAddress = event.params.token;
+  let amount = event.params.amount;
+  
+  // Load the lock using tokenId as the ID
+  let lockId = Bytes.fromI32(tokenId.toI32());
+  let lock = Lock.load(lockId);
+  
+  if (lock == null) {
+    log.warning("Lock not found for tokenId: {}", [tokenId.toString()]);
+    return;
+  }
+  
+  // Update lock status
+  lock.isActive = false;
+  lock.unlockedAt = event.block.timestamp;
+  lock.duration = event.block.timestamp.minus(lock.lockedAt);
+  lock.save();
+
+  // Update user stats
+  let user = User.load(lock.user);
+  if (user != null) {
+    user.totalValueLocked = user.totalValueLocked.minus(amount);
+    user.activeLocks = user.activeLocks - 1;
+    user.lastSeenAt = event.block.timestamp;
+    user.save();
+  }
+
+  // Update token stats
+  let token = Token.load(lock.token);
+  if (token != null) {
+    token.totalValueLocked = token.totalValueLocked.minus(amount);
+    token.activeLocks = token.activeLocks - 1;
+    token.save();
+  }
+
+  // Update protocol stats
+  let protocolStats = getOrCreateProtocolStats();
+  protocolStats.totalValueLocked = protocolStats.totalValueLocked.minus(amount);
+  protocolStats.activeLocks = protocolStats.activeLocks - 1;
+  protocolStats.lastUpdatedAt = event.block.timestamp;
+  protocolStats.save();
+
+  // Update daily stats
+  let dailyStats = getOrCreateDailyStats(event.block.timestamp);
+  dailyStats.unlocks = dailyStats.unlocks + 1;
+  dailyStats.totalValueLocked = protocolStats.totalValueLocked;
+  dailyStats.save();
+
+  // Create user activity
+  let userAddress = event.transaction.from;
+  let activityId = userAddress.toHexString()
+    .concat("-")
+    .concat(event.block.timestamp.toString())
+    .concat("-LOCK_UNLOCKED");
+  let activity = new UserActivity(Bytes.fromUTF8(activityId));
+  activity.user = lock.user;
+  activity.activityType = "LOCK_UNLOCKED";
+  activity.lock = lock.id;
+  activity.nft = null;
+  activity.timestamp = event.block.timestamp;
+  activity.transactionHash = event.transaction.hash;
+  activity.metadata = null;
+  activity.save();
 } 
