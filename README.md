@@ -33,7 +33,7 @@ To interact with Paper Protocol you need to use [web app](https://paper-protocol
 
 Of course, that's not all. You are not alone in this journey of edging SELL button with the inability to click it because your funds are locked. There are other people that lock their ETH so they hold it with guarantee. So especially for all of you, there is [leaderboard](https://paper-protocol.vercel.app/believer-index) that shows how degen you are. This table shows the rating of wallets, how much ETH they locked, their position in rating and **Believer Index**.
 
-The Graph powers this Believer Index. Instead of just tracking who deposited what, it calculates your conviction score by multiplying your ETH amount by your target price (`amount * target_price`). Lock 1 ETH at $10k target? You're more of a believer than someone who locks 2 ETH at $4k target. You locked 100 ETH at $20k target? Wow, for such actions to ETH community 1st place among all HODLers is yours.
+[The Graph](https://thegraph.com/studio/subgraph/paper-protocol) powers this Believer Index. Instead of just tracking who deposited what, it calculates your conviction score by multiplying your ETH amount by your target price (`amount * target_price`). Lock 1 ETH at $10k target? You're more of a believer than someone who locks 2 ETH at $4k target. You locked 100 ETH at $20k target? Wow, for such actions to ETH community 1st place among all HODLers is yours.
 
 ## Summarization
 
@@ -71,7 +71,16 @@ Because the contracts size limit for EVM chains is 24KB we can not pull all tier
 Contracts are deployed on Base Sepolia testnet.
 
 ```
+PaperProtocol:  0x32730feaBb33d0C430d37a5141AC7f98086Ac643
 OracleAdapter:  0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1
-Protocol:  0x32730feaBb33d0C430d37a5141AC7f98086Ac643
 Mock ETH Oracle:  0x207028099EF549f588Fa578519FD4bC087B95E32
 ```
+
+## Links
+
+- Web app main page: https://paper-protocol.vercel.app/
+- Web app leaderboard: https://paper-protocol.vercel.app/believer-index
+- The Graph subgraph: https://thegraph.com/studio/subgraph/paper-protocol
+- PaperProtocol contract: https://sepolia.basescan.org/address/0x32730feaBb33d0C430d37a5141AC7f98086Ac643
+- OracleAdapter contract: https://sepolia.basescan.org/address/0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1
+- MockETHOracle contract: https://sepolia.basescan.org/address/0x207028099EF549f588Fa578519FD4bC087B95E32
