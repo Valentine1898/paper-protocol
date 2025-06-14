@@ -81,6 +81,7 @@ Mock ETH Oracle:  0x207028099EF549f588Fa578519FD4bC087B95E32
 - Web app main page: https://paper-protocol.vercel.app/
 - Web app leaderboard: https://paper-protocol.vercel.app/believer-index
 - The Graph subgraph: https://thegraph.com/studio/subgraph/paper-protocol
+- OpenSea collection: https://testnets.opensea.io/collection/paper-protocol-1
 - PaperProtocol contract: https://sepolia.basescan.org/address/0x32730feaBb33d0C430d37a5141AC7f98086Ac643
 - OracleAdapter contract: https://sepolia.basescan.org/address/0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1
 - MockETHOracle contract: https://sepolia.basescan.org/address/0x207028099EF549f588Fa578519FD4bC087B95E32
