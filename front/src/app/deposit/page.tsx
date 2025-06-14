@@ -1,8 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import DepositForm from "@/components/DepositForm";
+import WithdrawForm from "@/components/WithdrawForm";
 import Header from "@/components/Header";
 import EthereumBelieverIndex from "@/components/EthereumBelieverIndex";
 
 export default function DepositPage() {
+  const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit");
+
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
       <Header showWalletConnect={true} />
@@ -11,7 +17,7 @@ export default function DepositPage() {
         <div className="container mx-auto px-4 pt-12 pb-4">
           <div className="text-center mb-12">
             <h2 className="text-display text-5xl font-normal text-primary-900 mb-4">
-              Create ETH Position
+              {activeTab === "deposit" ? "Create ETH Position" : "Manage Positions"}
             </h2>
 
             <p className="text-mono text-sm lg:text-base text-primary-500 font-bold tracking-wider uppercase">
@@ -22,7 +28,34 @@ export default function DepositPage() {
 
         <div className="container mx-auto px-4 py-16 pt-0">
           <div className="max-w-6xl mx-auto">
-            <DepositForm />
+            {/* Tab switcher */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-white rounded-lg shadow-sm p-1 inline-flex">
+                <button
+                  onClick={() => setActiveTab("deposit")}
+                  className={`px-8 py-3 rounded-md font-mono font-bold text-lg transition-all ${
+                    activeTab === "deposit"
+                      ? "bg-primary-800 text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  💰 Deposit
+                </button>
+                <button
+                  onClick={() => setActiveTab("withdraw")}
+                  className={`px-8 py-3 rounded-md font-mono font-bold text-lg transition-all ${
+                    activeTab === "withdraw"
+                      ? "bg-primary-800 text-white"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  🎯 Withdraw
+                </button>
+              </div>
+            </div>
+
+            {/* Form content */}
+            {activeTab === "deposit" ? <DepositForm /> : <WithdrawForm />}
           </div>
         </div>
         

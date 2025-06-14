@@ -69,12 +69,16 @@ interface NFTCardProps {
   amount: string;
   targetPrice: string;
   lockPrice?: number;
+  hideTitle?: boolean;
+  hideNote?: boolean;
 }
 
 export default function NFTCard({
   amount,
   targetPrice,
   lockPrice = 2325.65,
+  hideTitle = false,
+  hideNote = false,
 }: NFTCardProps) {
   const getTierFromPrice = (price: string): NFTTier => {
     if (!price) return NFT_TIERS.paper;
@@ -98,24 +102,26 @@ export default function NFTCard({
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h3 className=" text-xl font-mono font-bold text-primary-900 mb-2 mt-8">
-          Your future NFT
-        </h3>
-        <div
-          className={`inline-flex items-center space-x-2 px-3 py-1  ${currentTier.backgroundColor} ${currentTier.borderColor} border`}
-        >
-          <span className="text-sm">{currentTier.icon}</span>
-          <span
-            className={`text-mono text-md font-bold ${currentTier.textColor}`}
+      {!hideTitle && (
+        <div className="text-center">
+          <h3 className=" text-xl font-mono font-bold text-primary-900 mb-2 mt-8">
+            Your future NFT
+          </h3>
+          <div
+            className={`inline-flex items-center space-x-2 px-3 py-1  ${currentTier.backgroundColor} ${currentTier.borderColor} border`}
           >
-            {currentTier.range}
-          </span>
+            <span className="text-sm">{currentTier.icon}</span>
+            <span
+              className={`text-mono text-md font-bold ${currentTier.textColor}`}
+            >
+              {currentTier.range}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div
-        className={`bg-white relative p-3 transition-all duration-300 h-fit`}
+        className={`bg-white relative p-3 transition-all duration-300 h-fit ${hideTitle ? '' : ''}`}
       >
         {/* NFT Visual */}
         <div
@@ -183,12 +189,14 @@ export default function NFTCard({
         </div>
       </div>
       {/* Additional Info */}
-      <div className="text-center space-y-2">
-        <p className="text-body text-xs text-paper-600">
-          <strong>Note:</strong> You will receive an NFT representing your
-          deposit. You can withdraw your funds when the target price is reached.
-        </p>
-      </div>
+      {!hideNote && (
+        <div className="text-center space-y-2">
+          <p className="text-body text-xs text-paper-600">
+            <strong>Note:</strong> You will receive an NFT representing your
+            deposit. You can withdraw your funds when the target price is reached.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
