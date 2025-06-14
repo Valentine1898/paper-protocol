@@ -69,7 +69,6 @@ export default function EthereumBelieverIndex() {
       setData(result.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);

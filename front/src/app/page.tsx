@@ -1,5 +1,6 @@
 import StartDepositingButton from "@/components/StartDepositingButton";
 import Header from "@/components/Header";
+import EthereumBelieverIndex from "@/components/EthereumBelieverIndex";
 
 export default function Home() {
   return (
@@ -78,6 +79,11 @@ export default function Home() {
           </div>
 
           <div />
+        </div>
+        
+        {/* Ethereum Believer Leaderboard Section */}
+        <div className="max-w-7xl mx-auto px-4 pb-16">
+          <EthereumBelieverIndex />
         </div>
       </main>
     </div>

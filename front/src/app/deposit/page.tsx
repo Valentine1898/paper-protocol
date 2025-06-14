@@ -1,5 +1,6 @@
 import DepositForm from "@/components/DepositForm";
 import Header from "@/components/Header";
+import EthereumBelieverIndex from "@/components/EthereumBelieverIndex";
 
 export default function DepositPage() {
   return (
@@ -22,6 +23,13 @@ export default function DepositPage() {
         <div className="container mx-auto px-4 py-16 pt-0">
           <div className="max-w-6xl mx-auto">
             <DepositForm />
+          </div>
+        </div>
+        
+        {/* Ethereum Believer Leaderboard Section */}
+        <div className="container mx-auto px-4 pb-16">
+          <div className="max-w-6xl mx-auto">
+            <EthereumBelieverIndex />
           </div>
         </div>
       </main>
