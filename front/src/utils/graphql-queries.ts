@@ -157,7 +157,7 @@ export const calculatePositionValue = (amount: string, targetPrice: string): str
 };
 
 // Helper function to format GraphQL query with variables
-export const formatQuery = (query: string, variables?: Record<string, any>) => {
+export const formatQuery = (query: string, variables?: Record<string, unknown>) => {
   return {
     query,
     variables: variables || {}

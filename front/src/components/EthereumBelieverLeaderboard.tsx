@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatEther } from "viem";
 
 // GraphQL query for Ethereum Believer Index leaderboard
@@ -41,7 +41,7 @@ export default function EthereumBelieverLeaderboard() {
   const [error, setError] = useState<string | null>(null);
   const [limit, setLimit] = useState(50);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(SUBGRAPH_URL, {
@@ -73,7 +73,7 @@ export default function EthereumBelieverLeaderboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchData();
@@ -129,10 +129,7 @@ export default function EthereumBelieverLeaderboard() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(parseInt(timestamp) * 1000);
-    return date.toLocaleDateString();
-  };
+
 
   const getRankEmoji = (rank: number) => {
     switch (rank) {
@@ -179,7 +176,16 @@ export default function EthereumBelieverLeaderboard() {
   const positions = data?.ethPositions || [];
   console.log('Raw positions from subgraph:', positions);
   
-  const userStats = positions.reduce((acc: any, position: EthPosition) => {
+  interface UserStats {
+    [depositor: string]: {
+      depositor: string;
+      totalBelieverIndex: bigint;
+      totalEthLocked: bigint;
+      positionCount: number;
+    };
+  }
+
+  const userStats = positions.reduce((acc: UserStats, position: EthPosition) => {
     const depositor = position.depositor;
     if (!acc[depositor]) {
       acc[depositor] = {
@@ -197,8 +203,10 @@ export default function EthereumBelieverLeaderboard() {
     return acc;
   }, {});
 
+  type UserStatsValue = UserStats[string];
+
   const users = Object.values(userStats)
-    .sort((a: any, b: any) => {
+    .sort((a: UserStatsValue, b: UserStatsValue) => {
       if (a.totalBelieverIndex > b.totalBelieverIndex) return -1;
       if (a.totalBelieverIndex < b.totalBelieverIndex) return 1;
       return 0;
@@ -259,7 +267,7 @@ export default function EthereumBelieverLeaderboard() {
                 </td>
               </tr>
             ) : (
-              users.map((user: any, index: number) => (
+              users.map((user: UserStatsValue, index: number) => (
                 <tr
                   key={user.depositor}
                   className={`hover:bg-gray-50 ${
