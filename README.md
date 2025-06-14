@@ -1,7 +1,8 @@
+<div align="center" style="width: 100%; height: 150px; margin-bottom: 20px;">
+  <img src="logo.png" alt="Paper Protocol" style="width: 100%; height: 150px; object-fit: cover; object-position: center 70%;"/>
+</div>
+
 <div align="center">
-  <img src="logo.png" alt="Paper Protocol" width="300"/>
-  
-  # Paper Protocol
   
   ### The first protocol that guarantees you will achieve your desired price
   
@@ -21,16 +22,11 @@ Paper Protocol is a revolutionary DeFi solution that ensures traders achieve the
 ## How It Works?
 
 <div align="center">
-
-### 🔵 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 🔺 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 🟦
-
-**1. SELECT** &nbsp;&nbsp;&nbsp;&nbsp; **2. SET TARGET** &nbsp;&nbsp;&nbsp;&nbsp; **3. MINT PAPER**  
-**AMOUNT** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **PRICE** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **NFT**
-
+  <img src="how-it-works.png" alt="How Paper Protocol Works" width="600" style="background-color: white; padding: 20px; border-radius: 10px;"/>
 </div>
 
 1. **Select Amount**: Choose the amount of tokens you want to lock
-2. **Set Target Price**: Define your desired exit price
+2. **Set Target Price**: Define your desired exit price  
 3. **Mint Paper NFT**: Receive an NFT representing your locked position that automatically executes at your target price
 
 ## Deployed Contracts (Base Sepolia)
