@@ -104,7 +104,7 @@ export default function EthereumBelieverIndex() {
   const formatAddress = (address: string) => {
     // ENS mapping with addresses in lowercase for easier matching
     const ensMap: { [key: string]: string } = {
-      '0xe4984b5c26eeb6c3d5832cea6e0b38e8ffa2ef2e': 'tosic.eth',
+      '0xe4984b5c26eeb6c3d5832cea6e0b38e8ffa2ef2e': 'tosik.eth',
       '0x4ffac681fae75170e96e8087b848e9ec4f4ca871': 'velaskes.eth',
       '0x163bceef1e94f3d82d0122f8791e9e5f214d438c': 'kolom.eth',
     };
@@ -238,7 +238,7 @@ export default function EthereumBelieverIndex() {
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="font-bold text-gray-800">
-                    Ξ {formatIndex(wallet.totalPositionValue.toString())}
+                     {formatIndex(wallet.totalPositionValue.toString())}
                   </div>
                 </td>
                 <td className="py-3 px-4 text-right text-gray-600">
