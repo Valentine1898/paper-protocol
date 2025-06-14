@@ -33,19 +33,19 @@ const NFT_TIERS: Record<string, NFTTier> = {
     backgroundColor: "bg-gold-50",
     textColor: "text-gold-800",
     accentColor: "text-gold-600",
-    icon: "💡",
+    icon: "💪",
     description:
       "Calculated risk, calculated reward. You've done your homework and it shows.",
     svgPath: "/NFT/smart.svg",
     range: "$5,000 - $7,500",
   },
   strong: {
-    name: "Strong Hands Tier",
+    name: " Strong Hands Tier",
     borderColor: "border-steel-400",
     backgroundColor: "bg-steel-50",
     textColor: "text-steel-800",
     accentColor: "text-steel-600",
-    icon: "💪",
+    icon: "🦾",
     description:
       "Steel resolve, steel hands. You're not just investing, you're making a statement.",
     svgPath: "/NFT/strong.svg",
@@ -99,7 +99,7 @@ export default function NFTCard({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-display text-xl font-normal text-primary-100 mb-2">
+        <h3 className=" text-xl font-mono font-bold text-primary-900 mb-2 mt-8">
           Your future NFT
         </h3>
         <div
@@ -107,7 +107,7 @@ export default function NFTCard({
         >
           <span className="text-sm">{currentTier.icon}</span>
           <span
-            className={`text-mono text-xs font-bold ${currentTier.textColor}`}
+            className={`text-mono text-md font-bold ${currentTier.textColor}`}
           >
             {currentTier.range}
           </span>
@@ -115,10 +115,13 @@ export default function NFTCard({
       </div>
 
       <div
-        className={`${currentTier.backgroundColor} ${currentTier.borderColor} border-2  p-6 transition-all duration-300`}
+        className={`bg-white relative p-3 transition-all duration-300 h-fit`}
       >
         {/* NFT Visual */}
-        <div className="bg-white  p-6 mb-4 text-center">
+        <div
+          className={`${currentTier.borderColor} border-4 absolute inset-2 `}
+        ></div>
+        <div className="bg-white text-center h-fit mt-2">
           <div className="relative inline-block">
             <div className="mx-auto flex justify-center">
               <Image
@@ -134,17 +137,21 @@ export default function NFTCard({
         </div>
 
         {/* NFT Info */}
-        <div className="space-y-3">
+        <div className="space-y-1 p-4 mb-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-paper-600">lock price:</span>
+            <span className="text-paper-600 text-mono font-bold">
+              lock price:
+            </span>
             <span className="text-mono font-bold">${lockPrice.toFixed(2)}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-paper-600">target price:</span>
+            <span className="text-paper-600 text-mono font-bold">
+              target price:
+            </span>
             <span className="text-mono font-bold">
               {targetPrice ? `$${parseFloat(targetPrice).toFixed(0)}` : "--"}
               {targetPrice && (
-                <span className={`ml-1 ${currentTier.accentColor}`}>
+                <span className={`ml-1 text-green-700`}>
                   ({priceIncrease > 0 ? "+" : ""}
                   {priceIncrease.toFixed(1)}%)
                 </span>
@@ -152,7 +159,7 @@ export default function NFTCard({
             </span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-paper-600">amount:</span>
+            <span className="text-paper-600 text-mono font-bold">amount:</span>
             <span className="text-mono font-bold">
               {amount ? `${parseFloat(amount).toFixed(1)} ETH` : "-- ETH"}
             </span>
@@ -160,33 +167,21 @@ export default function NFTCard({
         </div>
 
         {/* Tier Badge */}
-        <div className="mt-4 pt-4 border-t border-current border-opacity-20">
+        <div className=" border-current border-opacity-20">
           <div
-            className={`inline-flex items-center space-x-2 px-3 py-1 
-                 ${currentTier.backgroundColor} ${currentTier.borderColor} border`}
+            className={`inline-flex items-center  px-3 py-1 w-full
+                 ${currentTier.backgroundColor} `}
           >
-            <span className="text-lg">{currentTier.icon}</span>
+            <span className="text-lg pr-2">{currentTier.icon}</span>
             <span
-              className={`text-mono text-xs font-bold ${currentTier.textColor}`}
+              className={`text-mono text-md font-bold ${currentTier.textColor}`}
             >
+              {" "}
               {currentTier.name}
             </span>
           </div>
         </div>
-
-        {/* Dynamic Message */}
-        {amount && targetPrice && (
-          <div className="mt-4 p-3 bg-white bg-opacity-50 border border-current border-opacity-20 ">
-            <p
-              className="text-body text-xs italic"
-              style={{ color: currentTier.textColor.replace("text-", "") }}
-            >
-              {currentTier.description}
-            </p>
-          </div>
-        )}
       </div>
-
       {/* Additional Info */}
       <div className="text-center space-y-2">
         <p className="text-body text-xs text-paper-600">
