@@ -1,0 +1,10 @@
+import EthereumBelieverIndex from "@/components/EthereumBelieverIndex";
+
+export default function BelieverIndexPage() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Ethereum Believer Index</h1>
+      <EthereumBelieverIndex />
+    </div>
+  );
+} 
