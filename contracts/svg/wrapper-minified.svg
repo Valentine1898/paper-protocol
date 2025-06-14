@@ -1,0 +1,25 @@
+<svg width="304" height="379" viewBox="0 0 304 379" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="304" height="379" fill="white"/>
+<rect x="7.67033" y="7.67033" width="288.659" height="363.659" fill="white" stroke="#D5CAB4" stroke-width="3.34066"/>
+<rect width="286" height="40" transform="translate(9 330)" fill="#D5CAB4" fill-opacity="0.2"/>
+<g transform="translate(24,248)">
+<text font-family="Courier New, monospace" font-size="14" font-weight="700">
+  <tspan fill="#A7A7A7">lock price: </tspan>
+  <tspan fill="#302207">$2325.65</tspan>
+</text>
+</g>
+<g transform="translate(24,272)">
+<text font-family="Courier New, monospace" font-size="14" font-weight="700">
+  <tspan fill="#A7A7A7">target price: </tspan>
+  <tspan fill="#302207">$2444</tspan>
+  <tspan fill="#24C35C">(80,79%)</tspan>
+</text>
+</g>
+  <g transform="translate(24,296)">
+<text font-family="Courier New, monospace" font-size="14" font-weight="700">
+  <tspan fill="#A7A7A7">amount: </tspan>
+  <tspan fill="#302207">0.5 ETH</tspan>
+</text>
+</g>
+<text x="21" y="358" font-family="Courier New, monospace" font-weight="700" font-size="16.7" fill="#302207">🧻 Paper Hands Tier</text>
+</svg>

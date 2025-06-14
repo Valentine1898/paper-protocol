@@ -55,49 +55,6 @@ contract Deploy is Script {
 
         protocol.setOracleAdapter(address(adapter));
 
-        PaperProtocol.Preset[] memory tokenPresets = new PaperProtocol.Preset[](
-            3
-        );
-        tokenPresets[0] = PaperProtocol.Preset({
-            token: address(mockToken),
-            amount: 100 ether,
-            priceTarget: 1.5 ether // $1.5 target (50% increase)
-        });
-        tokenPresets[1] = PaperProtocol.Preset({
-            token: address(mockToken),
-            amount: 100 ether,
-            priceTarget: 2 ether // $2 target (100% increase)
-        });
-        tokenPresets[2] = PaperProtocol.Preset({
-            token: address(mockToken),
-            amount: 100 ether,
-            priceTarget: 3 ether // $3 target (200% increase)
-        });
-
-        // Set up presets for native token with increasing price targets
-        PaperProtocol.Preset[] memory ethPresets = new PaperProtocol.Preset[](
-            3
-        );
-        ethPresets[0] = PaperProtocol.Preset({
-            token: address(0),
-            amount: 0.001 ether,
-            priceTarget: 3000 ether // $3000 target (50% increase)
-        });
-        ethPresets[1] = PaperProtocol.Preset({
-            token: address(0),
-            amount: 0.01 ether,
-            priceTarget: 4000 ether // $4000 target (100% increase)
-        });
-        ethPresets[2] = PaperProtocol.Preset({
-            token: address(0),
-            amount: 0.05 ether,
-            priceTarget: 6000 ether // $6000 target (200% increase)
-        });
-
-        // Set all presets
-        protocol.setPresets(tokenPresets);
-        protocol.setPresets(ethPresets);
-
         vm.stopBroadcast();
 
         console2.log("Mock Token: ", address(mockToken));
@@ -105,20 +62,5 @@ contract Deploy is Script {
         console2.log("ETH Oracle: ", address(ethOracle));
         console2.log("Adapter: ", address(adapter));
         console2.log("Protocol: ", address(protocol));
-
-        // Log preset details
-        console2.log("\nMock Token Presets:");
-        for (uint256 i = 0; i < tokenPresets.length; i++) {
-            console2.log("Preset", i + 1);
-            console2.log("  Amount:", tokenPresets[i].amount);
-            console2.log("  Price Target:", tokenPresets[i].priceTarget);
-        }
-
-        console2.log("\nETH Presets:");
-        for (uint256 i = 0; i < ethPresets.length; i++) {
-            console2.log("Preset", i + 1);
-            console2.log("  Amount:", ethPresets[i].amount);
-            console2.log("  Price Target:", ethPresets[i].priceTarget);
-        }
     }
 }

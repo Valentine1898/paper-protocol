@@ -2,9 +2,15 @@
 pragma solidity ^0.8.24;
 
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
+import {IPaperProtocol} from "./interfaces/IPaperProtocol.sol";
+
+import {PaperTiers} from "./PaperTiers.sol";
+import {PaperWrapper} from "./PaperWrapper.sol";
 
 library URIUtils {
-    function _generateBase64EncodedJSON(
+    function generateBase64EncodedJSON(
         bytes memory json
     ) internal pure returns (string memory) {
         return
@@ -26,20 +32,53 @@ library URIUtils {
         return string(abi.encodePacked(baseURL, svgBase64Encoded));
     }
 
-    function _generateTokenSVG(
-        uint256 tokenId_
-    ) internal pure returns (string memory) {
-        return
-            string(
-                abi.encodePacked(
-                    '<svg data-name="Paper Protocol" xmlns="http://www.w3.org/2000/svg">NFT</svg>'
-                )
-            );
+    function generateTokenSVG(
+        IPaperProtocol.Deposit memory deposit,
+        uint256 oracleDecimals
+    ) internal view returns (string memory) {
+        PaperTiers.PaperTierData memory paperTierData = PaperTiers
+            .getPaperTierData(deposit.priceTarget, oracleDecimals);
+
+        PaperWrapper.PaperProtocolTokenSVGArgs
+            memory paperWrapperArgs = PaperWrapper.PaperProtocolTokenSVGArgs({
+                lockPrice: deposit.priceAtDeposit,
+                targetPrice: deposit.priceTarget,
+                depositAmount: deposit.amount,
+                oracleDecimals: oracleDecimals,
+                tokenDecimals: getTokenDecimals(deposit.token),
+                tokenSymbol: getTokenSymbol(deposit.token),
+                borderColor: paperTierData.borderColor,
+                tierText: paperTierData.tierText,
+                tierTextColor: paperTierData.tierTextColor,
+                paperSVG: paperTierData.paperSVG
+            });
+
+        bytes memory fullSvg = PaperWrapper.getPaperProtocolTokenSVG(
+            paperWrapperArgs
+        );
+
+        return string(fullSvg);
+    }
+
+    function getTokenSymbol(
+        address token
+    ) internal view returns (string memory) {
+        if (token == address(0)) {
+            return "ETH";
+        }
+        return IERC20Metadata(token).symbol();
+    }
+
+    function getTokenDecimals(address token) internal view returns (uint8) {
+        if (token == address(0)) {
+            return 18;
+        }
+        return IERC20Metadata(token).decimals();
     }
 
     /*
 {
-   "name": "Paper Protocol Deposit #1",
+   "name": "Paper Protocol NFT ${id}",
    "description": "A deposit in Paper Protocol",
    "image": "https://",
    "attributes": [
@@ -56,17 +95,22 @@ library URIUtils {
          "value": "2000"
       },
       {
-         "trait_type": "Deposit Date",
-         "value": "2024-03-20"
+         "trait_type": "Tier",
+         "value": "Paper Hands" | "Smart Hands" |  "Strong Hands" | "Diamond Hands"
       }
    ]
 }
 */
-    function _tokenURI(uint256 tokenId_) internal pure returns (string memory) {
-        string memory svgImageURI = svgToImageURI(_generateTokenSVG(tokenId_));
+    function tokenURI(
+        IPaperProtocol.Deposit memory deposit,
+        uint256 oracleDecimals
+    ) internal view returns (string memory) {
+        string memory svgImageURI = svgToImageURI(
+            generateTokenSVG(deposit, oracleDecimals)
+        );
 
         return
-            _generateBase64EncodedJSON(
+            generateBase64EncodedJSON(
                 abi.encodePacked(
                     '{"name":"Paper Protocol",',
                     '"image":"',
@@ -84,9 +128,9 @@ library URIUtils {
       "external_link": "https://",
    }
    */
-    function _contractURI() internal pure returns (string memory) {
+    function contractURI() internal view returns (string memory) {
         return
-            _generateBase64EncodedJSON(
+            generateBase64EncodedJSON(
                 abi.encodePacked('{"name":"Paper Protocol"}')
             );
     }
