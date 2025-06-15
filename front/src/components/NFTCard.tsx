@@ -104,8 +104,8 @@ export default function NFTCard({
     <div className="space-y-6">
       {!hideTitle && (
         <div className="text-center">
-          <h3 className=" text-xl font-mono font-bold text-primary-900 mb-2 mt-8">
-            Your future NFT
+          <h3 className=" text-3xl text-display text-primary-900 mb-4 mt-4 ">
+            Your future NFT tier:
           </h3>
           <div
             className={`inline-flex items-center space-x-2 px-3 py-1  ${currentTier.backgroundColor} ${currentTier.borderColor} border`}
@@ -121,7 +121,9 @@ export default function NFTCard({
       )}
 
       <div
-        className={`bg-white relative p-3 transition-all duration-300 h-fit ${hideTitle ? '' : ''}`}
+        className={`bg-white relative p-3 transition-all duration-300 h-fit ${
+          hideTitle ? "" : ""
+        }`}
       >
         {/* NFT Visual */}
         <div
@@ -190,10 +192,11 @@ export default function NFTCard({
       </div>
       {/* Additional Info */}
       {!hideNote && (
-        <div className="text-center space-y-2">
-          <p className="text-body text-xs text-paper-600">
+        <div className="text-center space-y-2 w-full flex items-center justify-center">
+          <p className="text-body text-xs text-paper-600 w-[80%]">
             <strong>Note:</strong> You will receive an NFT representing your
-            deposit. You can withdraw your funds when the target price is reached.
+            deposit. You can withdraw your funds when the target price is
+            reached.
           </p>
         </div>
       )}

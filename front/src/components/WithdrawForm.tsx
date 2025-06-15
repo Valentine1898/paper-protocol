@@ -207,16 +207,6 @@ export default function WithdrawForm() {
         <h3 className="text-lg font-mono font-bold text-primary-800 mb-2">
           Your Active Positions
         </h3>
-        <div className="flex items-center space-x-2 text-sm">
-          <div
-            className={`w-2 h-2 ${
-              ethPriceLoading ? "bg-yellow-500" : "bg-green-500"
-            } animate-pulse`}
-          ></div>
-          <span className="text-body font-medium text-primary-900">
-            Current ETH Price: ${ethPrice.toLocaleString()}
-          </span>
-        </div>
       </div>
 
       {/* NFT Gallery Grid */}

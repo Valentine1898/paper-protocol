@@ -22,9 +22,9 @@ export default function Header({ showWalletConnect = false }: HeaderProps) {
               <Image
                 src="/logo.svg"
                 alt="Paper Protocol"
-                width={48}
-                height={48}
-                className="hover:opacity-80 transition-opacity duration-200"
+                width={359}
+                height={84}
+                className="hover:opacity-80 transition-opacity duration-200 "
               />
             </div>
           </Link>

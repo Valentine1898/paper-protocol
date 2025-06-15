@@ -275,27 +275,13 @@ export default function DepositForm() {
       <div className="space-y-6 lg:col-span-2">
         <div className="bg-white    p-9 pt-8 ">
           {/* Price Target Input */}
-          <div className="mb-10">
+          <div className="mb-19">
             <div className="flex items-center justify-between ">
               <label className="block text-lg font-mono font-bold text-primary-800">
-                Choose your target price
+                Set target price for 1 ETH
               </label>
-              <div className="flex items-center space-x-2 text-md">
-                <div
-                  className={`w-2 h-2 ${
-                    ethPriceLoading
-                      ? "bg-yellow-500"
-                      : ethPriceError
-                      ? "bg-red-500"
-                      : "bg-green-500"
-                  } animate-pulse`}
-                ></div>
-                <span className="text-body font-medium text-primary-900">
-                  1 ETH{" "}
-                  <span className="text-primary-900/40">
-                    ≈ {ethPriceLoading ? "..." : formattedPrice}
-                  </span>
-                </span>
+              <div className="text-md text-primary-900/60">
+                Max Price: $22,222
               </div>
             </div>
 
@@ -308,10 +294,8 @@ export default function DepositForm() {
               step="1"
               paddingLeft="pl-10"
               min="1"
-              max="222222"
+              max="22222"
             />
-            {/* Constraint hint */}
-            <div className="mt-2 text-xs text-gray-500">Max: $222,222</div>
 
             {/* Preset Buttons */}
             <div className="flex gap-4 mb-6 mt-4">
@@ -351,11 +335,10 @@ export default function DepositForm() {
           <div className="mb-8">
             <div className="flex items-center justify-between ">
               <label className="block text-lg font-mono font-bold text-primary-800 ">
-                Set ETH amount
+                Set amount of ETH to deposit
               </label>
-              <div className="text-md text-paper-600 mb-3 flex items-center">
-                <span className="pr-2">Available balance:</span>
-                <span>{getCurrentTokenBalance().toFixed(4)} ETH</span>
+              <div className="text-md text-paper-600  flex items-center">
+                Min amount: 0.01 ETH
               </div>
             </div>
             <CurrencyInput
@@ -368,7 +351,10 @@ export default function DepositForm() {
               min="0.01"
             />
             {/* Constraint hint */}
-            <div className="mt-2 text-xs text-gray-500">Min: 0.01 ETH</div>
+            <div className="mt-2 text-xs text-gray-500">
+              <span className="pr-2">Available balance:</span>
+              <span>{getCurrentTokenBalance().toFixed(4)} ETH</span>
+            </div>
           </div>
 
           {/* Network Warning */}

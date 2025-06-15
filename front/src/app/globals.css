@@ -1,10 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Mate+SC:wght@400&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Mate SC", serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: var(--font-mate-sc), serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: "Courier New", monospace;
 
   --color-background: #ffffff;
@@ -70,7 +68,7 @@
 body {
   background: #ffffff;
   color: #171717;
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -106,11 +104,11 @@ body {
 
 /* Typography helpers */
 .text-display {
-  font-family: "Mate SC", serif;
+  font-family: var(--font-mate-sc), serif;
 }
 
 .text-body {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 .text-mono {
