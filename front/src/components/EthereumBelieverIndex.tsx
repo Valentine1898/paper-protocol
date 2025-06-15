@@ -207,7 +207,7 @@ export default function EthereumBelieverIndex() {
   return (
     <div className="  pt-8 mb-24">
       <div className="flex items-center justify-center mb-4">
-        <h3 className="text-5xl font-display text-primary-800 mb-6">
+        <h3 className="text-5xl text-display text-primary-800 mb-6">
           ETH Believer Leaderboard
         </h3>
       </div>
