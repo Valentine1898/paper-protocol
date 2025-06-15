@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
-import { useETHPrice } from "@/hooks/useETHPrice";
 import NFTCard from "./NFTCard";
 import toast from "react-hot-toast";
 
@@ -48,7 +47,7 @@ export default function WithdrawForm() {
   const [positions, setPositions] = useState<EthPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [withdrawing, setWithdrawing] = useState<string | null>(null);
-  const { price: ethPrice, loading: ethPriceLoading } = useETHPrice();
+  const [ethPrice, setEthPrice] = useState(0);
 
   // Fetch user's positions
   const fetchPositions = useCallback(async () => {
@@ -85,13 +84,30 @@ export default function WithdrawForm() {
     }
   }, [user?.wallet?.address]);
 
-  console.log(positions);
-
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
       fetchPositions();
     }
   }, [authenticated, user?.wallet?.address, fetchPositions]);
+
+  // Fetch current ETH price
+  useEffect(() => {
+    const fetchEthPrice = async () => {
+      try {
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+        );
+        const data = await response.json();
+        setEthPrice(data.ethereum.usd);
+      } catch {
+        setEthPrice(3000); // Fallback price
+      }
+    };
+
+    fetchEthPrice();
+    const interval = setInterval(fetchEthPrice, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const formatAmount = (value: string) => {
     const ethValue = formatEther(BigInt(value));

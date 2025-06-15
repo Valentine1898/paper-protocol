@@ -51,9 +51,6 @@ export default function DepositForm() {
   const paperProtocol = usePaperProtocol();
   const {
     price: ethPrice,
-    formattedPrice,
-    loading: ethPriceLoading,
-    error: ethPriceError,
   } = useETHPrice();
   const [isCorrectChain, setIsCorrectChain] = useState(true);
 
@@ -211,7 +208,7 @@ export default function DepositForm() {
     if (!isCorrectChain) {
       try {
         await paperProtocol.switchToBaseSepolia();
-      } catch (error) {
+      } catch {
         toast.error("Please switch to Base Sepolia network");
         return;
       }
@@ -220,9 +217,9 @@ export default function DepositForm() {
     try {
       setLoading(true);
       const loadingToast = toast.loading("Creating deposit...");
-
-      const tx = await paperProtocol.depositEther(amount, targetPrice);
-
+      
+      await paperProtocol.depositEther(amount, targetPrice);
+      
       toast.dismiss(loadingToast);
       toast.success("Deposit created successfully!");
 
