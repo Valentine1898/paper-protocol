@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
+import { useETHPrice } from "@/hooks/useETHPrice";
 import NFTCard from "./NFTCard";
 import toast from "react-hot-toast";
 
@@ -37,7 +38,8 @@ interface EthPosition {
   transactionHash: string;
 }
 
-const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || 
+const SUBGRAPH_URL =
+  process.env.NEXT_PUBLIC_SUBGRAPH_URL ||
   "https://api.studio.thegraph.com/query/113895/paper-protocol/latest";
 
 export default function WithdrawForm() {
@@ -46,30 +48,7 @@ export default function WithdrawForm() {
   const [positions, setPositions] = useState<EthPosition[]>([]);
   const [loading, setLoading] = useState(true);
   const [withdrawing, setWithdrawing] = useState<string | null>(null);
-  const [ethPrice, setEthPrice] = useState(0);
-  const [ethPriceLoading, setEthPriceLoading] = useState(true);
-
-  // Fetch current ETH price
-  useEffect(() => {
-    const fetchEthPrice = async () => {
-      try {
-        setEthPriceLoading(true);
-        const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-        );
-        const data = await response.json();
-        setEthPrice(data.ethereum.usd);
-      } catch {
-        setEthPrice(3000); // Fallback price
-      } finally {
-        setEthPriceLoading(false);
-      }
-    };
-
-    fetchEthPrice();
-    const interval = setInterval(fetchEthPrice, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, []);
+  const { price: ethPrice, loading: ethPriceLoading } = useETHPrice();
 
   // Fetch user's positions
   const fetchPositions = useCallback(async () => {
@@ -84,7 +63,7 @@ export default function WithdrawForm() {
         },
         body: JSON.stringify({
           query: USER_ETH_POSITIONS_QUERY,
-          variables: { depositor: user.wallet.address.toLowerCase() }
+          variables: { depositor: user.wallet.address.toLowerCase() },
         }),
       });
 
@@ -93,7 +72,7 @@ export default function WithdrawForm() {
       }
 
       const result = await response.json();
-      
+
       if (result.errors) {
         throw new Error(result.errors[0].message);
       }
@@ -105,6 +84,8 @@ export default function WithdrawForm() {
       setLoading(false);
     }
   }, [user?.wallet?.address]);
+
+  console.log(positions);
 
   useEffect(() => {
     if (authenticated && user?.wallet?.address) {
@@ -136,22 +117,23 @@ export default function WithdrawForm() {
     try {
       setWithdrawing(positionId);
       const loadingToast = toast.loading("Processing withdrawal...");
-      
+
       // Convert position ID to number (assuming it's a numeric string)
       const tokenId = parseInt(positionId);
-      
+
       // Call the withdraw function on the contract
       const hash = await paperProtocol.withdraw(tokenId);
-      
+
       toast.dismiss(loadingToast);
-      toast.success(`Withdrawal successful! Transaction: ${hash.slice(0, 10)}...`);
-      
+      toast.success(
+        `Withdrawal successful! Transaction: ${hash.slice(0, 10)}...`
+      );
+
       // Refresh positions after a delay
       setTimeout(async () => {
         await fetchPositions();
         setWithdrawing(null);
       }, 5000);
-      
     } catch {
       toast.error("Withdrawal failed. Please try again.");
       setWithdrawing(null);
@@ -226,7 +208,11 @@ export default function WithdrawForm() {
           Your Active Positions
         </h3>
         <div className="flex items-center space-x-2 text-sm">
-          <div className={`w-2 h-2 ${ethPriceLoading ? "bg-yellow-500" : "bg-green-500"} animate-pulse`}></div>
+          <div
+            className={`w-2 h-2 ${
+              ethPriceLoading ? "bg-yellow-500" : "bg-green-500"
+            } animate-pulse`}
+          ></div>
           <span className="text-body font-medium text-primary-900">
             Current ETH Price: ${ethPrice.toLocaleString()}
           </span>
@@ -243,9 +229,9 @@ export default function WithdrawForm() {
             <div
               key={position.id}
               className={`border-2 rounded-lg overflow-hidden transition-all ${
-                targetReached 
-                  ? 'border-green-400 bg-green-50' 
-                  : 'border-gray-200 bg-white'
+                targetReached
+                  ? "border-green-400 bg-green-50"
+                  : "border-gray-200 bg-white"
               }`}
             >
               {/* NFT Card */}
@@ -263,12 +249,16 @@ export default function WithdrawForm() {
               <div className="border-t p-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Amount Locked</span>
-                  <span className="font-mono font-bold">Ξ {formatAmount(position.amount)}</span>
+                  <span className="font-mono font-bold">
+                    Ξ {formatAmount(position.amount)}
+                  </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Target Price</span>
-                  <span className="font-mono font-bold">${targetPrice.toLocaleString()}</span>
+                  <span className="font-mono font-bold">
+                    ${targetPrice.toLocaleString()}
+                  </span>
                 </div>
 
                 <div className="text-xs text-gray-500">
@@ -282,10 +272,9 @@ export default function WithdrawForm() {
                     disabled={withdrawing === position.id}
                     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-mono font-bold py-2 px-4 rounded transition-all duration-200"
                   >
-                    {withdrawing === position.id 
-                      ? "Withdrawing..." 
-                      : "🎯 Withdraw"
-                    }
+                    {withdrawing === position.id
+                      ? "Withdrawing..."
+                      : "🎯 Withdraw"}
                   </button>
                 )}
               </div>
@@ -295,4 +284,4 @@ export default function WithdrawForm() {
       </div>
     </div>
   );
-} 
+}

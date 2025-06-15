@@ -1,73 +1,49 @@
-import { useState, useEffect, useCallback } from "react";
+import { useReadContract } from "wagmi";
+import { formatEther } from "viem";
+import OracleAdapterABI from "../../abi/OracleAdapter.json";
 
-interface ETHPriceData {
-  price: number;
-  loading: boolean;
-  error: string | null;
-  lastUpdated: Date | null;
-}
+const ORACLE_ADAPTER_ADDRESS =
+  "0xb580Bbc11d8Af009D1235E4601CB3B500B2E7da1" as const;
 
-export function useETHPrice(): ETHPriceData {
-  const [price, setPrice] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+export function useETHPrice() {
+  const {
+    data: rawPrice,
+    isLoading,
+    error,
+    refetch,
+  } = useReadContract({
+    address: ORACLE_ADAPTER_ADDRESS,
+    abi: OracleAdapterABI.abi,
+    functionName: "getPrice",
+    args: ["0x0000000000000000000000000000000000000000"], // address(0) for ETH
+  });
 
-  const fetchETHPrice = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Format the price to user-friendly string
+  const formattedPrice = rawPrice
+    ? (() => {
+        const priceInEth = formatEther(rawPrice as bigint);
+        const priceNumber = parseFloat(priceInEth);
 
-      // Using CoinGecko API (free, no API key required)
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&include_last_updated_at=true",
-        {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
+        // Format as currency with no decimal places for round numbers,
+        // or 2 decimal places for non-round numbers
+        if (priceNumber % 1 === 0) {
+          return `$${priceNumber.toLocaleString()}`;
+        } else {
+          return `$${priceNumber.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
         }
-      );
+      })()
+    : "$0";
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.ethereum && data.ethereum.usd) {
-        setPrice(data.ethereum.usd);
-        setLastUpdated(new Date());
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (err) {
-      console.error("Error fetching ETH price:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch ETH price"
-      );
-      // Fallback to a reasonable default price if API fails
-      setPrice(2765.65);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Fetch price immediately
-    fetchETHPrice();
-
-    // Set up interval to fetch price every 30 seconds
-    const interval = setInterval(fetchETHPrice, 30000);
-
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, [fetchETHPrice]);
+  const price = rawPrice ? Number(formatEther(rawPrice as bigint)) : 0;
 
   return {
     price,
-    loading,
+    formattedPrice,
+    loading: isLoading,
     error,
-    lastUpdated,
+    refetch,
   };
 }

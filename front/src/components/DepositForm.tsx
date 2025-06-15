@@ -51,6 +51,7 @@ export default function DepositForm() {
   const paperProtocol = usePaperProtocol();
   const {
     price: ethPrice,
+    formattedPrice,
     loading: ethPriceLoading,
     error: ethPriceError,
   } = useETHPrice();
@@ -219,12 +220,12 @@ export default function DepositForm() {
     try {
       setLoading(true);
       const loadingToast = toast.loading("Creating deposit...");
-      
+
       const tx = await paperProtocol.depositEther(amount, targetPrice);
-      
+
       toast.dismiss(loadingToast);
       toast.success("Deposit created successfully!");
-      
+
       // Reset form
       setAmount("");
       setTargetPrice("");
@@ -292,13 +293,7 @@ export default function DepositForm() {
                 <span className="text-body font-medium text-primary-900">
                   1 ETH{" "}
                   <span className="text-primary-900/40">
-                    ≈ $
-                    {ethPriceLoading
-                      ? "..."
-                      : ethPrice.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                    ≈ {ethPriceLoading ? "..." : formattedPrice}
                   </span>
                 </span>
               </div>
@@ -316,10 +311,8 @@ export default function DepositForm() {
               max="222222"
             />
             {/* Constraint hint */}
-            <div className="mt-2 text-xs text-gray-500">
-              Max: $222,222
-            </div>
-            
+            <div className="mt-2 text-xs text-gray-500">Max: $222,222</div>
+
             {/* Preset Buttons */}
             <div className="flex gap-4 mb-6 mt-4">
               {getPricePresets().map((preset, index) => (
@@ -375,9 +368,7 @@ export default function DepositForm() {
               min="0.01"
             />
             {/* Constraint hint */}
-            <div className="mt-2 text-xs text-gray-500">
-              Min: 0.01 ETH
-            </div>
+            <div className="mt-2 text-xs text-gray-500">Min: 0.01 ETH</div>
           </div>
 
           {/* Network Warning */}
