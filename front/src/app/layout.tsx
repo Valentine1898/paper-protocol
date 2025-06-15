@@ -31,22 +31,22 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
-        <Toaster 
+        <Toaster
           position="bottom-right"
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#363636',
-              color: '#fff',
+              background: "#363636",
+              color: "#fff",
             },
             success: {
               style: {
-                background: '#10b981',
+                background: "#10b981",
               },
             },
             error: {
               style: {
-                background: '#ef4444',
+                background: "#ef4444",
               },
             },
           }}

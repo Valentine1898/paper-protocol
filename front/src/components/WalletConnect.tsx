@@ -74,7 +74,7 @@ export default function WalletConnect() {
   if (!ready) {
     return (
       <div className="flex items-center">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-800"></div>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function WalletConnect() {
     return (
       <button
         onClick={login}
-        className="bg-primary-900 hover:bg-primary-800 text-secondary font-bold font-mono px-4 py-3 rounded-sm transition-colors duration-200 text-md"
+        className="bg-primary-800 hover:bg-primary-900 text-white font-mono font-bold px-6 py-3 transition-colors duration-200 text-lg"
       >
         Connect Wallet
       </button>
@@ -101,30 +101,34 @@ export default function WalletConnect() {
         <button
           onClick={handleSwitchChain}
           disabled={switchingChain}
-          className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-3 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+          className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white px-4 py-2 font-mono font-bold transition-colors duration-200 text-sm"
         >
           {switchingChain ? "Switching..." : "Switch to Base Sepolia"}
         </button>
       )}
 
       <div
-        className={`border rounded-lg px-3 py-2 ${
+        className={`border px-4 py-2 ${
           isCorrectChain
-            ? "bg-gray-50 border-gray-200"
+            ? "bg-white border-paper-200"
             : "bg-red-50 border-red-200"
         }`}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <div>
-            <div className="text-xs text-gray-500">Balance</div>
-            <div className="text-sm font-medium">
+            <div className="text-xs text-primary-900/60 font-mono font-bold">
+              Balance
+            </div>
+            <div className="text-sm font-mono font-bold text-primary-900">
               {loading ? "..." : `${parseFloat(balance).toFixed(4)} ETH`}
             </div>
           </div>
-          <div className="border-l border-gray-300 h-8"></div>
+          <div className="border-l border-paper-200 h-8"></div>
           <div>
-            <div className="text-xs text-gray-500">Address</div>
-            <div className="text-sm font-mono">
+            <div className="text-xs text-primary-900/60 font-mono font-bold">
+              Address
+            </div>
+            <div className="text-sm font-mono font-bold text-primary-900">
               {user?.wallet?.address
                 ? formatAddress(user.wallet.address)
                 : "..."}
@@ -132,11 +136,13 @@ export default function WalletConnect() {
           </div>
           {!isCorrectChain && (
             <>
-              <div className="border-l border-gray-300 h-8"></div>
+              <div className="border-l border-paper-200 h-8"></div>
               <div>
-                <div className="text-xs text-red-500">Wrong Network</div>
-                <div className="text-xs text-red-600">
-                  Switch to Base Sepolia
+                <div className="text-xs text-red-600 font-mono font-bold">
+                  Wrong Network
+                </div>
+                <div className="text-xs text-red-500 font-mono font-bold">
+                  Base Sepolia
                 </div>
               </div>
             </>
@@ -146,7 +152,7 @@ export default function WalletConnect() {
 
       <button
         onClick={logout}
-        className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors duration-200 text-sm"
+        className="bg-primary-800 hover:bg-primary-900 text-white px-3 py-2 font-mono font-bold transition-colors duration-200 text-xl h-12 w-12"
         title="Disconnect"
       >
         ✕
