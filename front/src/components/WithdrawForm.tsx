@@ -1,6 +1,6 @@
 "use client";
 
-vimport { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
