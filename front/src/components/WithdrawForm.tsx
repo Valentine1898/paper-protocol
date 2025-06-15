@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+vimport { useState, useEffect, useCallback } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatEther } from "viem";
 import { usePaperProtocol } from "@/hooks/usePaperProtocol";
@@ -38,8 +38,7 @@ interface EthPosition {
 }
 
 const SUBGRAPH_URL =
-  process.env.NEXT_PUBLIC_SUBGRAPH_URL ||
-  "https://api.studio.thegraph.com/query/113895/paper-protocol/latest";
+  "https://api.studio.thegraph.com/query/113895/paper-protocol/v1.1.1";
 
 export default function WithdrawForm() {
   const { authenticated, user } = usePrivy();

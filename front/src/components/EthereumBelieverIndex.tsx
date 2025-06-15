@@ -35,9 +35,9 @@ interface LeaderboardData {
   }>;
 }
 
+
 const SUBGRAPH_URL =
-  process.env.NEXT_PUBLIC_SUBGRAPH_URL ||
-  "https://api.studio.thegraph.com/query/113895/paper-protocol/latest";
+  "https://api.studio.thegraph.com/query/113895/paper-protocol/v1.1.1";
 
 export default function EthereumBelieverIndex() {
   const [data, setData] = useState<LeaderboardData | null>(null);
